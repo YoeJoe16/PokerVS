@@ -1,0 +1,59 @@
+# Runa / Arena — prototipo de PokerVS
+
+Juego 2D de magia para Android en vertical. Godot **4.7 estable**, sin complementos ni recursos externos. Abre `project.godot` en el editor y pulsa **F6** en `scenes/main.tscn`, o **F5** para ejecutar el proyecto.
+
+## Cómo jugar
+
+Pulsa **Comenzar expedición**. Dibuja un solo trazo en el panel inferior, comenzando en el punto blanco de la referencia del HUD, y levanta el dedo para lanzar. En computadora usa el botón izquierdo del ratón. El tamaño y la posición del dibujo pueden variar; la orientación y el sentido deben seguir la referencia. Un toque o un trazo demasiado corto no lanza hechizos.
+
+Las tres tarjetas superiores muestran tus gestos y su recarga. El enemigo ataca automáticamente cuando termina su cuenta atrás; el tiempo sigue corriendo mientras dibujas. El escudo absorbe daño y el hielo detiene temporalmente la cuenta atrás.
+
+| Hechizo | Gesto | Efecto | Recarga |
+| --- | --- | --- | --- |
+| Fuego | Diagonal ascendente hacia la derecha | 28 daño | 1,4 s |
+| Rayo | Zigzag descendente | 42 daño | 2,8 s |
+| Escudo | Círculo horario desde arriba | +24 barrera, máximo 48 | 4 s |
+| Curación | V desde arriba a la izquierda | +26 vida, máximo 100 | 6 s |
+| Hielo | V invertida desde abajo a la izquierda | 16 daño y congela 2,5 s | 3 s |
+| Explosión | L desde arriba a la izquierda | 60 daño | 5 s |
+
+Empiezas con fuego, rayo y escudo. Cada victoria otorga monedas y recupera 12 de vida. En el refugio selecciona uno de los tres espacios y compra un hechizo por 35 monedas, o equipa uno que ya posees. Equipar un hechizo que ya llevas intercambia los espacios. Puedes salir de la tienda sin comprar. Supera cuatro guardianes y un jefe para ganar.
+
+Las monedas y los hechizos comprados pertenecen a la partida actual. Reiniciar o cerrar el juego los borra. No hay todavía metaprogresión ni guardado.
+
+## Estructura
+
+- `scenes/main.tscn`: escena de entrada; genera los botones de menú y tienda.
+- `scripts/main.gd`: combate, HUD, dibujo táctil, tienda y estados de la partida. Arte provisional dibujado por código.
+- `scripts/gestures.gd`: reconocimiento por remuestreo de 32 puntos y comparación con los hechizos equipados. Umbral configurable en `recognize`.
+- `tests/smoke.gd`: pruebas de reconocimiento y del flujo de una partida completa.
+
+Los gestos se definen en `templates()`. Para ampliar el catálogo habrá que mantener sincronizados sus datos y efectos en `main.gd`; conviene separarlos en recursos cuando crezca el prototipo. Los números actuales son de prueba, no un balance definitivo.
+
+## Validación en la nube
+
+```bash
+export XDG_CACHE_HOME=/workspace/.cache
+export XDG_DATA_HOME=/workspace/.local/share
+export XDG_CONFIG_HOME=/workspace/.config
+cd /workspace/PokerVS
+/workspace/.tools/godot-4.7/Godot_v4.7-stable_linux.x86_64 --headless --path . --editor --import
+/workspace/.tools/godot-4.7/Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/smoke.gd
+/workspace/.tools/godot-4.7/Godot_v4.7-stable_linux.x86_64 --headless --path . --quit-after 120
+```
+
+En otra máquina sustituye la ruta del ejecutable por tu Godot 4.7. Estas comprobaciones no sustituyen las pruebas de pantalla y tacto en un teléfono.
+
+## Probar en Android
+
+1. Abre el proyecto en Godot 4.7 e instala las plantillas de exportación de esa misma versión desde el editor.
+2. Configura OpenJDK 17 y Android SDK según la documentación de exportación Android de Godot. Define sus rutas en los ajustes del editor.
+3. En **Proyecto → Exportar**, añade un destino Android, establece un identificador de paquete propio y exporta un APK de depuración. No necesitas modificar escenas para pasar de ratón a tacto: está activada la emulación de ratón desde la pantalla táctil.
+4. Instala el APK en tu teléfono o usa el despliegue con USB y depuración USB habilitada.
+5. Verifica los seis gestos a distintas velocidades, las tres tarjetas en pantalla, las tiendas, las recargas, la derrota y la victoria. Comprueba especialmente márgenes y legibilidad en tu modelo.
+
+La ventana lógica es de 480 × 900, orientación vertical y proporción conservada; otras pantallas pueden mostrar bandas. Se usa el renderizador Compatibility para este prototipo 2D. No se ha generado ni probado un APK en este entorno y no se incluyen credenciales de firma.
+
+## Pendiente de diseño
+
+Validar comodidad del dibujo en Android antes de ampliar el catálogo. Después: enemigos con patrones propios, efectos y sonido, práctica de gestos, pausa, ajustes de accesibilidad, equilibrio, progresión permanente y guardado.
