@@ -1,5 +1,6 @@
 extends SceneTree
 
+const Campaign = preload("res://scripts/campaign.gd")
 const Gestures = preload("res://scripts/gestures.gd")
 var checks := 0
 var failures := 0
@@ -23,6 +24,12 @@ func run() -> void:
 	check(Gestures.recognize([], [0, 1, 2]) == -1, "Empty gesture rejected")
 	check(Gestures.recognize([Vector2.ZERO, Vector2.ZERO], [0, 1, 2]) == -1, "Stationary gesture rejected")
 	check(Gestures.recognize(patterns[3], [0, 1, 2]) == -1, "Unequipped healing gesture rejected")
+	for index in range(1, 76):
+		var location := Campaign.location(index)
+		check(location.faction == ("presos" if index <= 30 else "guardias"), "Faction at level %d" % index)
+		var level: int = location.level
+		check(location.rank == ("jefe" if level == 15 else ("élite" if level % 5 == 0 else "normal")), "Encounter rank at level %d" % index)
+	check(Campaign.location(16).stage == 2 and Campaign.location(16).level == 1, "Stage transition after level 15")
 	var scene = load("res://scenes/main.tscn").instantiate()
 	root.add_child(scene)
 	scene.set_process(false)
@@ -85,7 +92,33 @@ func run() -> void:
 		scene.cooldown.fill(0.0)
 		scene.cast_spell(1)
 	await process_frame
-	check(scene.battle == 6, "Five victories complete expedition")
+	check(scene.battle == 6, "Five victories complete opening demo")
+	scene.battle = 3
+	scene.start_battle()
+	scene.equipped = [0, 1, 2]
+	scene.cast_spell(0)
+	check(scene.enemy_hp == scene.enemy_max - 8 and scene.enemy_ward == 0, "Prisoner ward absorbs damage before health")
+	scene.battle = 4
+	scene.start_battle()
+	scene.attack_timer = 0
+	scene._process(0.01)
+	check(is_equal_approx(scene.attack_timer, 0.8), "Double pulse schedules quick second hit")
+	scene.attack_timer = 0
+	scene._process(0.01)
+	check(is_equal_approx(scene.attack_timer, 3.8), "Double pulse returns to normal interval")
+	scene.battle = 5
+	scene.start_battle()
+	check(scene.next_damage() == 16, "Elite begins with normal attack")
+	scene.attack_count = 1
+	check(scene.next_damage() == 26, "Elite telegraphs charged second attack")
+	scene.enemy_hp = 110
+	scene.cast_spell(0)
+	check(scene.enraged and scene.attack_timer <= 2.5, "Elite enrages at half health")
+	check(is_equal_approx(scene.next_interval(), 2.8), "Enrage accelerates elite attacks")
+	scene.enemy_hp = 1
+	scene.cooldown.fill(0.0)
+	scene.cast_spell(0)
+	check(scene.last_reward == 80 and scene.state == "victory", "Elite pays bonus and ends demo, not campaign")
 	scene.new_run()
 	check(scene.coins == 0 and scene.owned == [0, 1, 2], "Restart resets run progression")
 	scene.hp = 1

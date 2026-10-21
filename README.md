@@ -1,10 +1,10 @@
-# Runa / Arena — prototipo de PokerVS
+# Fuga Rúnica — prototipo de PokerVS
 
-Juego 2D de magia para Android en vertical. Godot **4.7 estable**, sin complementos ni recursos externos. Abre `project.godot` en el editor y pulsa **F6** en `scenes/main.tscn`, o **F5** para ejecutar el proyecto.
+Juego 2D de magia para Android en vertical. Eres un aprendiz encarcelado por un malentendido que busca escapar de una prisión moderna atravesada por magia. Godot **4.7 estable**, sin complementos ni recursos externos. Abre `project.godot` en el editor y pulsa **F6** en `scenes/main.tscn`, o **F5** para ejecutar el proyecto.
 
 ## Cómo jugar
 
-Pulsa **Comenzar expedición**. Dibuja un solo trazo en el panel inferior, comenzando en el punto blanco de la referencia del HUD, y levanta el dedo para lanzar. En computadora usa el botón izquierdo del ratón. El tamaño y la posición del dibujo pueden variar; la orientación y el sentido deben seguir la referencia. Un toque o un trazo demasiado corto no lanza hechizos.
+Pulsa **Iniciar la fuga**. Dibuja un solo trazo en el panel inferior, comenzando en el punto blanco de la referencia del HUD, y levanta el dedo para lanzar. En computadora usa el botón izquierdo del ratón. El tamaño y la posición del dibujo pueden variar; la orientación y el sentido deben seguir la referencia. Un toque o un trazo demasiado corto no lanza hechizos.
 
 Las tres tarjetas superiores muestran tus gestos y su recarga. El enemigo ataca automáticamente cuando termina su cuenta atrás; el tiempo sigue corriendo mientras dibujas. El escudo absorbe daño y el hielo detiene temporalmente la cuenta atrás.
 
@@ -17,7 +17,7 @@ Las tres tarjetas superiores muestran tus gestos y su recarga. El enemigo ataca 
 | Hielo | V invertida desde abajo a la izquierda | 16 daño y congela 2,5 s | 3 s |
 | Explosión | L desde arriba a la izquierda | 60 daño | 5 s |
 
-Empiezas con fuego, rayo y escudo. Cada victoria otorga monedas y recupera 12 de vida. En el refugio selecciona uno de los tres espacios y compra un hechizo por 35 monedas, o equipa uno que ya posees. Equipar un hechizo que ya llevas intercambia los espacios. Puedes salir de la tienda sin comprar. Supera cuatro guardianes y un jefe para ganar.
+Empiezas con fuego, rayo y escudo. Cada victoria otorga monedas y recupera 12 de vida. En el refugio selecciona uno de los tres espacios y compra un hechizo por 35 monedas, o equipa uno que ya posees. Equipar un hechizo que ya llevas intercambia los espacios. Puedes salir de la tienda sin comprar. Esta demo cubre los niveles 1–5 del bloque de celdas: Cobrador del pasillo, Chispa, La Remendadora, Tiza y Mazas (élite). Son presos, no guardias. El último combate cierra la demo, no la etapa ni la historia completa. Mazas alterna un golpe de 16 con otro de 26 de daño, y acelera por debajo de la mitad de su vida. La Remendadora empieza con 20 de barrera y Tiza ataca con dos pulsos. La tienda se presenta como contrabando entre presos.
 
 Las monedas y los hechizos comprados pertenecen a la partida actual. Reiniciar o cerrar el juego los borra. No hay todavía metaprogresión ni guardado.
 
@@ -25,6 +25,7 @@ Las monedas y los hechizos comprados pertenecen a la partida actual. Reiniciar o
 
 - `scenes/main.tscn`: escena de entrada; genera los botones de menú y tienda.
 - `scripts/main.gd`: combate, HUD, dibujo táctil, tienda y estados de la partida. Arte provisional dibujado por código.
+- `scripts/campaign.gd`: estructura de 5 etapas × 15 niveles, facciones y los cinco encuentros iniciales.
 - `scripts/gestures.gd`: reconocimiento por remuestreo de 32 puntos y comparación con los hechizos equipados. Umbral configurable en `recognize`.
 - `tests/smoke.gd`: pruebas de reconocimiento y del flujo de una partida completa.
 
@@ -57,3 +58,17 @@ La ventana lógica es de 480 × 900, orientación vertical y proporción conserv
 ## Pendiente de diseño
 
 Validar comodidad del dibujo en Android antes de ampliar el catálogo. Después: enemigos con patrones propios, efectos y sonido, práctica de gestos, pausa, ajustes de accesibilidad, equilibrio, progresión permanente y guardado.
+
+## Campaña acordada y alcance actual
+
+| Etapa | Sector | Rivales |
+| --- | --- | --- |
+| 1 | Bloque de celdas | Presos |
+| 2 | Patio y talleres | Presos |
+| 3 | Complejo de seguridad | Guardias |
+| 4 | Distrito penitenciario | Guardias especializados |
+| 5 | Umbral de salida | Seguridad de élite |
+
+Cada etapa tiene 15 niveles: élites en 5 y 10, jefe en 15. `PrisonCampaign.location()` describe los 75 puestos de la campaña; solo los primeros cinco tienen encuentros implementados y accesibles. Los demás requieren enemigos, escenarios y balance propios antes de habilitarse. Mazas es un élite del nivel 5, no el jefe del bloque.
+
+Dirección visual provisional: hormigón, barrotes, fluorescentes y cámaras con lentes rúnicas; uniformes y magia de contrabando. Personajes y fondos son dibujos por código, no arte final. El título «Fuga Rúnica» es provisional. La historia se insinúa con frases breves, sin cinemáticas.
