@@ -24,7 +24,11 @@ Las monedas y los hechizos comprados pertenecen a la partida actual. Reiniciar o
 ## Estructura
 
 - `scenes/main.tscn`: escena de entrada; genera los botones de menú y tienda.
-- `scripts/main.gd`: combate, HUD, dibujo táctil, tienda y estados de la partida. Arte provisional dibujado por código.
+- `scripts/main.gd`: combate, HUD, dibujo táctil, tienda y estados de la partida. Escenarios y personajes pixel art originales; efectos dibujados sobre una rejilla de píxeles.
+- `scenes/battle_arena.tscn`: fondo, aprendiz de espaldas y rival de frente, con sprites filtrados por vecino más cercano.
+- `scripts/battle_arena.gd`: poses, cola de lanzamientos, impactos y efectos para cada hechizo.
+- `scripts/battle_hud.gd`: información del rival y cuenta atrás sobre el escenario.
+- `assets/pixel/`: sprites y escenario PNG originales.
 - `scripts/campaign.gd`: estructura de 5 etapas × 15 niveles, facciones y los cinco encuentros iniciales.
 - `scripts/gestures.gd`: reconocimiento por remuestreo de 32 puntos y comparación con los hechizos equipados. Umbral configurable en `recognize`.
 - `tests/smoke.gd`: pruebas de reconocimiento y del flujo de una partida completa.
@@ -71,4 +75,27 @@ Validar comodidad del dibujo en Android antes de ampliar el catálogo. Después:
 
 Cada etapa tiene 15 niveles: élites en 5 y 10, jefe en 15. `PrisonCampaign.location()` describe los 75 puestos de la campaña; solo los primeros cinco tienen encuentros implementados y accesibles. Los demás requieren enemigos, escenarios y balance propios antes de habilitarse. Mazas es un élite del nivel 5, no el jefe del bloque.
 
-Dirección visual provisional: hormigón, barrotes, fluorescentes y cámaras con lentes rúnicas; uniformes y magia de contrabando. Personajes y fondos son dibujos por código, no arte final. El título «Fuga Rúnica» es provisional. La historia se insinúa con frases breves, sin cinemáticas.
+Dirección visual provisional: hormigón, barrotes, fluorescentes y cámaras con lentes rúnicas; uniformes y magia de contrabando. Personajes y fondo usan pixel art original: hojas de 11 poses por personaje y escenario de 240 × 148 píxeles, ampliados sin suavizado (aprendiz a 3×; rivales y escenario a 2×). El título «Fuga Rúnica» es provisional. La historia se insinúa con frases breves, sin cinemáticas.
+
+## Vista de combate y animaciones
+
+La composición usa al aprendiz de espaldas, abajo a la izquierda, y al preso de frente, arriba a la derecha. Se inspira en la disposición de los combates clásicos de Pokémon; los personajes y escenarios son originales de este proyecto. Se mantienen el combate en tiempo real y los tres hechizos equipados.
+
+Cada hechizo tiene una pose de preparación, un gesto propio, un efecto y recuperación. Los rivales también usan los gestos correspondientes a sus ataques. Los lanzamientos rápidos se encolan para que ninguno pierda su animación. El golpe final termina de reproducirse antes de cambiar de pantalla; el resultado del combate se calcula al aceptar el hechizo, igual que en el prototipo anterior.
+
+| Hechizo | Gesto de manos |
+| --- | --- |
+| Fuego | Una palma abierta hacia el rival |
+| Rayo | Índice elevado para canalizar el rayo |
+| Escudo | Antebrazos cruzados delante del cuerpo |
+| Curación | Manos juntas cerca del pecho |
+| Hielo | Dos dedos extendidos y brazo de apoyo |
+| Explosión | Ambos brazos abiertos, palmas elevadas |
+
+Los PNG están incluidos y Godot no necesita Python para ejecutar el juego. Para editar/regenerar los sprites, modifica `tools/build_pixel_assets.py` y ejecútalo con Python 3 y Pillow. Cada celda mide 64 × 72; las columnas son reposo, respiración, preparación, fuego, rayo, escudo, curación, hielo, explosión, impacto y derrota. Los cinco presos tienen siluetas y detalles distintos (mohicano, abrigo remendado, capucha, cadenas).
+
+La nueva vista se verificó con renderizado OpenGL por software y capturas de los seis hechizos. Sigue pendiente probar esta revisión en un teléfono Android real.
+
+![Vista del combate](docs/battle.png)
+
+[Ver la pose y el efecto de Rayo](docs/lightning.png).
