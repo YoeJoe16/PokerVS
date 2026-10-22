@@ -1,12 +1,14 @@
 extends Node2D
 
+const UI = preload("res://scripts/pixel_ui.gd")
+
 @onready var game: Node2D = get_parent()
 
 func panel(rect: Rect2, color: Color) -> void:
 	draw_style_box(game.style(color), rect)
 
 func text(value: String, pos: Vector2, size: int, color := Color("e9edf8")) -> void:
-	draw_string(ThemeDB.fallback_font, pos, value, HORIZONTAL_ALIGNMENT_LEFT, -1, size, color)
+	UI.text(self, value, pos, size, color, 228)
 
 func bar(rect: Rect2, ratio: float, color: Color) -> void:
 	draw_rect(rect, Color("38495a"))

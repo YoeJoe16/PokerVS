@@ -1,0 +1,17 @@
+[remap]
+
+importer="font_data_bmfont"
+type="FontFile"
+uid="uid://cqxlitvewfsiq"
+path="res://.godot/imported/rune_font.fnt-1ab3b16ab5acc61000e5a7c695e84c49.fontdata"
+
+[deps]
+
+source_file="res://assets/pixel/rune_font.fnt"
+dest_files=["res://.godot/imported/rune_font.fnt-1ab3b16ab5acc61000e5a7c695e84c49.fontdata"]
+
+[params]
+
+fallbacks=[]
+compress=true
+scaling_mode=2

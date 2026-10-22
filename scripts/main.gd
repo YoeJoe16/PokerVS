@@ -1,5 +1,6 @@
 extends Node2D
 
+const UI = preload("res://scripts/pixel_ui.gd")
 const Campaign = preload("res://scripts/campaign.gd")
 const Gestures = preload("res://scripts/gestures.gd")
 const NAMES = ["Fuego", "Rayo", "Escudo", "Curación", "Hielo", "Explosión"]
@@ -31,7 +32,7 @@ var stroke: Array = []
 var drawing := false
 var selected_slot := 0
 var controls: Array[Button] = []
-var font := ThemeDB.fallback_font
+var font = UI.FONT
 
 func _ready() -> void:
 	RenderingServer.set_default_clear_color(Color("111a21"))
@@ -39,15 +40,21 @@ func _ready() -> void:
 
 func button(label: String, rect: Rect2, action: Callable, disabled := false) -> void:
 	var node := Button.new()
+	node.theme = preload("res://assets/pixel/ui_theme.tres")
 	node.text = label
 	node.position = rect.position
 	node.size = rect.size
 	node.disabled = disabled
-	node.add_theme_font_size_override("font_size", 17)
-	node.add_theme_stylebox_override("normal", style(Color("294842")))
-	node.add_theme_stylebox_override("hover", style(Color("39665c")))
-	node.add_theme_stylebox_override("pressed", style(Color("477e6b")))
-	node.add_theme_stylebox_override("disabled", style(Color("27323a")))
+	node.add_theme_font_override("font", UI.FONT)
+	node.add_theme_font_size_override("font_size", 16)
+	node.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	node.add_theme_color_override("font_color", Color("e4d5b0"))
+	node.add_theme_color_override("font_disabled_color", Color("667c83"))
+	node.add_theme_stylebox_override("focus", UI.box(Color("efd496")))
+	node.add_theme_stylebox_override("normal", UI.box(Color("b3d3c2")))
+	node.add_theme_stylebox_override("hover", UI.box(Color("def4cc")))
+	node.add_theme_stylebox_override("pressed", UI.box(Color("86a3aa")))
+	node.add_theme_stylebox_override("disabled", UI.box(Color("657780")))
 	node.pressed.connect(action)
 	add_child(node)
 	controls.append(node)
@@ -63,6 +70,9 @@ func build_buttons() -> void:
 		for slot in 3:
 			var slot_id := slot
 			button("%d · %s" % [slot + 1, NAMES[equipped[slot]]], Rect2(16 + slot * 154, 153, 146, 48), func(): selected_slot = slot_id; build_buttons())
+			if slot == selected_slot:
+				controls[-1].add_theme_color_override("font_color", Color("ffe3a0"))
+				controls[-1].add_theme_stylebox_override("normal", UI.box(Color("ffe3a0")))
 		for id in 6:
 			var spell_id := id
 			var label: String = "Equipar" if id in owned else "Comprar · 35"
@@ -231,31 +241,28 @@ func next_interval() -> float:
 	return encounter.interval * (0.7 if enraged else 1.0)
 
 func prison_background() -> void:
-	draw_rect(Rect2(0, 0, 480, 900), Color("131e30"))
-	for y in range(0, 900, 8):
-		draw_line(Vector2(0, y), Vector2(480, y), Color("162135"), 1)
-	draw_rect(Rect2(0, 0, 480, 4), Color("93c6b1"))
+	draw_texture_rect(UI.WALL, Rect2(0, 0, 480, 900), false)
 
 func text(value: String, pos: Vector2, size := 20, color := Color("e9edf8")) -> void:
-	draw_string(font, pos, value, HORIZONTAL_ALIGNMENT_LEFT, -1, size, color)
+	UI.text(self, value, pos, size, color)
 
 func panel(rect: Rect2, color := Color("1d263d")) -> void:
 	draw_style_box(style(color), rect)
 
-func style(color: Color) -> StyleBoxFlat:
-	var box := StyleBoxFlat.new()
-	box.bg_color = color
-	box.set_corner_radius_all(0)
-	box.set_border_width_all(2)
-	box.border_color = Color("516578")
-	return box
+func style(color: Color) -> StyleBoxTexture:
+	return UI.box(color.lightened(0.65))
+
+func tableau(y: float) -> void:
+	draw_texture_rect(preload("res://assets/pixel/cell_block.png"), Rect2(0, y, 480, 296), false)
+	draw_texture_rect_region(preload("res://assets/pixel/apprentice.png"), Rect2(52, y + 104, 128, 144), Rect2(0, 0, 64, 72))
+	draw_texture_rect_region(preload("res://assets/pixel/mazas.png"), Rect2(278, y + 12, 128, 144), Rect2(0, 0, 64, 72))
 
 func glyph(id: int, origin: Vector2, size: float, color: Color) -> void:
 	var points := PackedVector2Array()
 	for point in Gestures.templates()[id]:
-		points.append(origin + point * size)
-	draw_polyline(points, color, 3.5, true)
-	draw_circle(points[0], 5, Color.WHITE)
+		points.append((origin + point * size).snapped(Vector2(2, 2)))
+	draw_polyline(points, color, 4, false)
+	draw_rect(Rect2(points[0] - Vector2(4, 4), Vector2(8, 8)), Color.WHITE)
 
 func bar(rect: Rect2, ratio: float, color: Color) -> void:
 	draw_rect(rect, Color("34495a"))
@@ -265,19 +272,21 @@ func bar(rect: Rect2, ratio: float, color: Color) -> void:
 func _draw() -> void:
 	prison_background()
 	if state == "menu":
-		text("F U G A   /   R Ú N I C A", Vector2(45, 126), 32, Color("a5c2ff"))
-		text("Un aprendiz. Una condena equivocada.", Vector2(35, 167), 22)
-		panel(Rect2(30, 215, 420, 420))
-		text("01   TRES RUNAS PARA ESCAPAR", Vector2(50, 260), 20)
+		panel(Rect2(28, 40, 424, 122), Color("263e43"))
+		text("FUGA RÚNICA", Vector2(80, 104), 48, Color("edd5a0"))
+		text("UN APRENDIZ / UNA CONDENA EQUIVOCADA", Vector2(86, 140), 16, Color("a5c7bc"))
+		tableau(184)
+		panel(Rect2(28, 496, 424, 162))
+		text("TRES RUNAS PARA ESCAPAR", Vector2(54, 526), 16, Color("edd5a0"))
 		for id in 3:
-			glyph(id, Vector2(65 + id * 135, 295), 65, COLORS[id])
-		text("02   DIBUJA PARA LANZAR", Vector2(50, 422), 20)
-		text("Un trazo, desde el punto blanco.", Vector2(50, 457), 20)
-		text("03   GÁNATE EL PASO POR EL BLOQUE", Vector2(45, 517), 18)
-		text("Cinco presos. El último controla el corredor.", Vector2(45, 554), 17)
-		text("Un malentendido. Nadie quiere escucharte.", Vector2(45, 595), 16, Color("a0aec9"))
-		text("Bloque 01 · Niveles 1–5 de 15", Vector2(105, 800), 18)
+			glyph(id, Vector2(76 + id * 135, 546), 36, COLORS[id])
+		text("DIBUJA DESDE EL PUNTO BLANCO", Vector2(58, 616), 16)
+		text("SUELTA PARA LANZAR EL HECHIZO", Vector2(58, 640), 16)
+		panel(Rect2(42, 784, 396, 64))
+		text("BLOQUE 01 / CINCO PRESOS", Vector2(72, 810), 16, Color("edd5a0"))
+		text("TU PRIMER PASO HACIA LA SALIDA", Vector2(58, 834), 16)
 	elif state in ["fight", "resolving"]:
+		panel(Rect2(8, 8, 464, 82), Color("203341"))
 		text("BLOQUE 01 / NIVEL %02d/15" % (arena.enemy_index + 1), Vector2(16, 32), 18, Color("b5ccbf"))
 		text("%d monedas" % coins, Vector2(337, 32), 17, Color("e8ca8b"))
 		text("APRENDIZ", Vector2(16, 60), 18)
@@ -302,28 +311,35 @@ func _draw() -> void:
 		text("TRAZA TU HECHIZO", Vector2(148, 553), 17, Color("a7b7be"))
 		text("Empieza en el punto blanco del símbolo", Vector2(70, 778), 15, Color("879bad"))
 		if stroke.size() > 1:
-			draw_polyline(PackedVector2Array(stroke), Color("c4dcff"), 4, false)
+			var pixel_stroke := PackedVector2Array()
+			for point in stroke:
+				pixel_stroke.append(point.snapped(Vector2(2, 2)))
+			draw_polyline(pixel_stroke, Color("c4dcff"), 4, false)
 		if not stroke.is_empty():
 			draw_rect(Rect2(stroke[0] - Vector2(3, 3), Vector2(6, 6)), Color.WHITE)
 		panel(Rect2(16, 814, 448, 66), Color("1c2c40"))
 		text(message, Vector2(25, 840), 14)
 		text("Furia activa" if enraged else "Presos / Bloque de celdas", Vector2(25, 864), 14, Color("93acaa"))
 	elif state == "shop":
+		panel(Rect2(16, 16, 448, 124))
 		text("CONTRABANDO", Vector2(25, 52), 30, Color("a5c2ff"))
 		text("Victoria: +%d monedas · +12 vida" % last_reward, Vector2(25, 90), 20)
 		text("%d monedas · Vida %d · Próximo nivel %d/15" % [coins, hp, battle], Vector2(25, 121), 18, Color("ffdb77"))
-		text("Elige un espacio; luego compra o equipa.", Vector2(25, 226), 18)
+		text("ELIGE UN ESPACIO Y EQUIPA UNA RUNA", Vector2(25, 226), 18)
 		for id in 6:
 			var y := 248 + id * 75
+			panel(Rect2(16, y - 16, 448, 68), Color("263844"))
 			glyph(id, Vector2(25, y), 32, COLORS[id])
 			text(NAMES[id], Vector2(76, y + 13), 20, COLORS[id])
 			text(DESCRIPTIONS[id], Vector2(76, y + 39), 15)
 		text("Espacio seleccionado: %d" % (selected_slot + 1), Vector2(30, 725), 18, Color("ffdb77"))
-		text("Sin duplicados: al equipar se intercambian.", Vector2(30, 850), 16, Color("a0aec9"))
+		text("LAS RUNAS EQUIPADAS SE INTERCAMBIAN", Vector2(30, 850), 16, Color("a0aec9"))
 	else:
-		text("CORREDOR DESPEJADO" if state == "victory" else "LA FUGA TERMINÓ", Vector2(25, 260), 29, Color("a5c2ff"))
-		text("Mazas cae. La puerta del patio sigue lejos." if state == "victory" else "Cada trazo es una nueva oportunidad.", Vector2(25, 320), 20)
-		text("Monedas restantes: %d" % coins, Vector2(30, 375), 22, Color("ffdb77"))
-		text("Fin de la demo · Niveles 1–5 del bloque.", Vector2(25, 430), 20)
-		text("Quedan diez niveles antes del jefe de etapa.", Vector2(25, 469), 18)
-		text("Ruta prevista: 5 etapas de 15 niveles.", Vector2(25, 510), 18, Color("a0aec9"))
+		panel(Rect2(24, 46, 432, 118))
+		text("CORREDOR LIBRE" if state == "victory" else "FUGA INTERRUMPIDA", Vector2(42, 104), 32, Color("edd5a0"))
+		text("MAZAS HA CAÍDO" if state == "victory" else "TE DEVOLVIERON A LA CELDA", Vector2(44, 142), 16)
+		tableau(186)
+		panel(Rect2(28, 500, 424, 116))
+		text("MONEDAS: %d" % coins, Vector2(48, 532), 16, Color("edd5a0"))
+		text("FIN DE LA DEMO / NIVELES 1 A 5" if state == "victory" else "PRUEBA OTRA COMBINACIÓN DE RUNAS", Vector2(48, 560), 16)
+		text("EL JEFE DEL BLOQUE SIGUE ESPERANDO" if state == "victory" else "CADA INTENTO ES UNA NUEVA OPORTUNIDAD", Vector2(48, 588), 16)

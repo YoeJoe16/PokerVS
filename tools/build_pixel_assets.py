@@ -101,6 +101,10 @@ def sprite(kind, pose):
         rect((28,16,31,17),INK); rect((36,16,39,17),INK)
         rect((29,16,30,16),'#f4e4c4'); rect((37,16,38,16),'#f4e4c4')
         rect((33,18,34,20),skin_shade)
+    body = im.copy()
+    if kind == 0:
+        im = Image.new("RGBA", (64, 72))
+        d = ImageDraw.Draw(im)
     # Arm joints. Each release has genuinely different hand silhouettes.
     joints = {
         'idle': (((18-broad,37),(19-broad,43)), ((46+broad,36),(48+broad,30))),
@@ -115,6 +119,10 @@ def sprite(kind, pose):
         'hit': (((18,34),(17,27)), ((46,36),(45,29))),
         'down': (((18,43),(15,50)), ((45,43),(48,49))),
     }
+    if kind == 0:
+        joints['gather'] = (((18,35),(28,29)), ((46,34),(39,27)))
+        joints['shield'] = (((17,30),(38,23)), ((48,29),(27,24)))
+        joints['heal'] = (((18,31),(43,24)), ((47,30),(44,24)))
     for side,(elbow,hand) in enumerate(joints[pose]):
         shoulder=(23-broad,31) if side==0 else (40+broad,31)
         points=[(x,y+bob) for x,y in (shoulder,elbow,hand)]
@@ -138,6 +146,10 @@ def sprite(kind, pose):
         # Each forearm carries a prison suppression cuff with a broken seal.
         ex,ey=elbow; rect((ex-2,ey-1,ex+2,ey), '#3b6267')
         rect((ex-1,ey-1,ex+1,ey-1),'#a5d6c6')
+    if kind == 0:
+        # Back view: the entire torso/head occludes arms reaching in front.
+        # Forearms remain visible only outside the body silhouette.
+        im.alpha_composite(body)
     if kind:
         im=ImageOps.mirror(im) # opponent faces the apprentice at bottom left
     return im
@@ -210,6 +222,42 @@ for box in ((128,62,215,86),(10,108,108,137)):
     for x in (x1+10,x2-10):
         d.rectangle((x,(y1+y2)//2,x+2,(y1+y2)//2+1),fill='#a0cdbb')
 bg.save(OUT/'cell_block.png')
+# UI wall and desk: 240 x 450, integer 2x scaling at runtime.
+wall=Image.new('RGB',(240,450),'#111b2b'); w=ImageDraw.Draw(wall)
+for y in range(0,450,16):
+    w.line((0,y,239,y),fill='#0d1625')
+    for x in range(-24 if y%32 else 0,240,48):
+        w.line((x,y,x,y+15),fill='#1c2a3b')
+for x in (6,230):
+    w.rectangle((x,0,x+3,449),fill='#304153')
+    w.line((x,0,x,449),fill='#53616b')
+    for y in range(12,450,38):
+        w.rectangle((x-1,y,x+4,y+3),fill='#667474')
+for x in (24,181):
+    w.line([(x,0),(x,34),(x+20,49),(x+20,99)],fill='#263e4c',width=3)
+    w.line([(x,0),(x,34),(x+20,49),(x+20,99)],fill='#739f91')
+for x in (24,190):
+    w.rectangle((x,401,x+27,442),fill='#0c1422')
+    for off in range(3,26,6):
+        w.line((x+off,403,x+off,440),fill='#3b5260',width=2)
+wall.save(OUT/'ui_wall.png')
+# Riveted metal frame, exported for StyleBoxTexture nine-patch controls.
+frame=Image.new('RGBA',(16,16)); f=ImageDraw.Draw(frame)
+f.rectangle((1,0,14,15),fill='#172638'); f.rectangle((0,1,15,14),fill='#172638')
+f.line([(1,0),(14,0),(14,1),(15,1),(15,14)],fill='#9ab4ac')
+f.line([(0,1),(0,14),(1,14),(1,15),(14,15)],fill='#425d6e')
+f.rectangle((2,2,13,13),outline='#30485d')
+for x,y in [(2,2),(12,2),(2,12),(12,12)]:
+    f.point((x,y),fill='#d5c99e')
+frame.resize((32,32),Image.Resampling.NEAREST).save(OUT/'ui_frame.png')
+# Pixel rune for the application icon and startup splash.
+icon=Image.new('RGBA',(32,32),'#111b2b'); q=ImageDraw.Draw(icon)
+q.rectangle((2,2,29,29),outline='#6d958e',width=1)
+q.rectangle((4,4,27,27),outline='#354b60',width=1)
+q.line([(9,23),(9,9),(16,6),(23,9),(23,16),(16,20),(9,16)],fill='#e6cb94',width=2)
+q.line([(16,12),(16,25)],fill='#8bd6be',width=2)
+for x,y in [(2,2),(28,2),(2,28),(28,28)]: q.rectangle((x,y,x+1,y+1),fill='#d6c7a4')
+icon.resize((128,128),Image.Resampling.NEAREST).save(OUT/'app_icon.png')
 # Optional review contact sheet; PNG runtime assets above need no tooling at runtime.
 if args.preview:
     preview=Image.new('RGB',(64*6,72*3),'#202d40')

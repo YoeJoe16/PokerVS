@@ -130,6 +130,8 @@ func _draw() -> void:
 func hand_origin(id: int, from_player: bool) -> Vector2:
 	var anchors := [Vector2(59, 27), Vector2(50, 4), Vector2(32, 30), Vector2(32, 30), Vector2(61, 32), Vector2(32, 18)]
 	var anchor: Vector2 = anchors[id]
+	if from_player and id == 3:
+		anchor = Vector2(44, 23)
 	if not from_player:
 		anchor.x = 63 - anchor.x
 	var actor: Sprite2D = player if from_player else opponent

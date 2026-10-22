@@ -99,3 +99,13 @@ La nueva vista se verificó con renderizado OpenGL por software y capturas de lo
 ![Vista del combate](docs/battle.png)
 
 [Ver la pose y el efecto de Rayo](docs/lightning.png).
+
+## Interfaz pixel art y corrección de brazos
+
+Toda la interfaz comparte la fuente bitmap original `RuneCompact`, con acentos y signos españoles. Menú, tienda, victoria, derrota y HUD usan marcos de metal, botones y fondos pixelados, además de un icono y una pantalla de inicio propios. Las fuentes se dibujan a escalas enteras y los símbolos y trazos visibles se ajustan a una rejilla de 2 píxeles; el reconocimiento sigue usando las coordenadas originales del dedo.
+
+El aprendiz se compone por capas: primero los brazos que llegan hacia delante y luego el torso, la cabeza y la bufanda que los ocultan en la vista de espaldas. La preparación, el escudo y la curación tienen poses adaptadas a esa perspectiva. Los enemigos de frente conservan el orden inverso. Una regresión de píxeles comprueba que las siete poses de lanzamiento no pinten encima del parche de la espalda.
+
+Para regenerar los recursos: `python3 tools/build_pixel_assets.py` y `python3 tools/build_pixel_font.py` (requieren Pillow). `scripts/pixel_ui.gd` centraliza la tipografía y los marcos; `assets/pixel/ui_theme.tres` aplica el mismo tema a los controles. No se necesitan estas herramientas para jugar.
+
+[Menú actualizado](docs/menu.png) · [Tienda](docs/shop.png) · [Pose de escudo corregida](docs/shield.png).

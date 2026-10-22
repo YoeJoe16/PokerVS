@@ -22,6 +22,17 @@ func finish_visuals(scene: Node) -> void:
 	scene._process(0.0)
 
 func run() -> void:
+	var hero := preload("res://assets/pixel/apprentice.png").get_image()
+	# In a back view, casting forearms must never paint over the jacket patch.
+	for frame in range(2, 9):
+		var patch_preserved := true
+		for x in range(28, 39):
+			for y in range(34, 44):
+				patch_preserved = patch_preserved and hero.get_pixel(frame * 64 + x, y) == hero.get_pixel(x, y)
+		check(patch_preserved, "Back view occludes casting arms in frame %d" % frame)
+	var pixel_font = preload("res://assets/pixel/rune_font.fnt")
+	for character in "áéíóúüñÁÉÍÓÚÜÑ¡¿":
+		check(pixel_font.has_char(character.unicode_at(0)), "Pixel font supports " + character)
 	var patterns := Gestures.templates()
 	for id in 6:
 		var transformed: Array = []
