@@ -77,25 +77,33 @@ for x,y in [(69,347),(201,323),(27,298)]:
     d.ellipse((x-17,y-4,x+19,y+5),fill='#172c3a')
     d.line((x-10,y+2,x+8,y+2),fill='#435d66')
     d.line((x-5,y-2,x+4,y-2),fill='#6a8885')
-# Bed frame and mattress. The character's hips sit on the near mattress edge.
-d.polygon([(55,249),(171,233),(194,263),(80,282)],fill='#142432')
-for x,y in [(60,243),(181,229),(83,271),(192,255)]:
-    d.rectangle((x,y,x+3,y+48),fill='#112130')
-    d.line((x,y,x,y+45),fill='#677c79')
-d.polygon([(57,233),(172,218),(192,234),(77,252)],fill='#182b36')
-d.polygon([(58,234),(173,221),(188,234),(78,250)],fill='#87988c')
-d.polygon([(78,250),(188,234),(188,244),(78,261)],fill='#536c69')
-d.line((79,252,187,236),fill='#b4b69a')
-# Pillow at the far end and an uneven folded blanket.
-d.polygon([(149,224),(169,222),(178,228),(158,232),(148,229)],fill='#bdbaa0')
-d.line((151,226,168,224),fill='#e0d0ac')
-d.polygon([(60,236),(92,232),(110,246),(80,251)],fill='#416674')
-d.polygon([(80,251),(110,246),(110,263),(80,270)],fill='#385461')
-for x in (83,92,101):
-    d.line((x,252,x,264),fill='#66858b')
-# Headboard visible behind the pillow.
-d.line([(179,232),(179,209),(194,208),(194,251)],fill='#162a36',width=4)
-d.line((180,210,193,209),fill='#7c8f88')
+# Front-facing bed: mattress and frame edges stay horizontal. The seated
+# character's hips meet the front edge at y=239; both feet remain on the floor.
+d.rectangle((55,263,194,276), fill='#142432')
+# Upright end rails behind the mattress.
+for x in (56,190):
+    d.rectangle((x,211,x+3,274), fill='#162a36')
+    d.line((x,212,x,273), fill='#7c8f88')
+# Mattress top, straight front edge and metal support.
+d.rectangle((59,222,189,239), fill='#87988c')
+d.line((60,222,188,222), fill='#b4b69a')
+d.rectangle((59,240,189,250), fill='#536c69')
+d.line((59,241,189,241), fill='#b4b69a')
+d.rectangle((56,251,193,255), fill='#182b36')
+d.line((57,251,192,251), fill='#677c79')
+for x in (59,187):
+    d.rectangle((x,255,x+3,278), fill='#112130')
+    d.line((x,256,x,277), fill='#677c79')
+# Pillow lies flat at the right end; blanket hangs over the left front edge.
+d.rectangle((155,225,181,233), fill='#bdbaa0')
+d.line((157,225,179,225), fill='#e0d0ac')
+d.line((155,232,181,232), fill='#969c88')
+d.rectangle((62,223,96,239), fill='#416674')
+d.line((63,224,95,224), fill='#66858b')
+d.rectangle((62,240,96,263), fill='#385461')
+for x in (66,77,89):
+    d.line((x,242,x,260), fill='#66858b')
+d.line((62,263,96,263), fill='#294450')
 # Stool, cup, tiny shelf and a sliver of a sealed cell door.
 d.rectangle((31,200,60,204),fill='#192b37')
 d.line((31,200,59,200),fill='#a39d80')
