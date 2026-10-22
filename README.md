@@ -4,7 +4,7 @@ Juego 2D de magia para Android en vertical. Eres un aprendiz encarcelado por un 
 
 ## Cómo jugar
 
-Pulsa **Iniciar la fuga**. Dibuja un solo trazo en el panel inferior, comenzando en el punto blanco de la referencia del HUD, y levanta el dedo para lanzar. En computadora usa el botón izquierdo del ratón. El tamaño y la posición del dibujo pueden variar; la orientación y el sentido deben seguir la referencia. Un toque o un trazo demasiado corto no lanza hechizos.
+Pulsa **INICIAR**. Dibuja un solo trazo en el panel inferior, comenzando en el punto blanco de la referencia del HUD, y levanta el dedo para lanzar. En computadora usa el botón izquierdo del ratón. El tamaño y la posición del dibujo pueden variar; la orientación y el sentido deben seguir la referencia. Un toque o un trazo demasiado corto no lanza hechizos.
 
 Las tres tarjetas superiores muestran tus gestos y su recarga. El enemigo ataca automáticamente cuando termina su cuenta atrás; el tiempo sigue corriendo mientras dibujas. El escudo absorbe daño y el hielo detiene temporalmente la cuenta atrás.
 
@@ -109,3 +109,19 @@ El aprendiz se compone por capas: primero los brazos que llegan hacia delante y 
 Para regenerar los recursos: `python3 tools/build_pixel_assets.py` y `python3 tools/build_pixel_font.py` (requieren Pillow). `scripts/pixel_ui.gd` centraliza la tipografía y los marcos; `assets/pixel/ui_theme.tres` aplica el mismo tema a los controles. No se necesitan estas herramientas para jugar.
 
 [Menú actualizado](docs/menu.png) · [Tienda](docs/shop.png) · [Pose de escudo corregida](docs/shield.png).
+
+## Menú animado y tutorial
+
+El menú ocupa toda la ventana de juego con una celda pixel art original. El aprendiz está sentado en la cama detrás de las rejas, con los brazos cruzados. Un bucle de 12 segundos combina respiración del cuerpo, movimiento independiente de cabeza, miradas laterales y parpadeos. Tres goteras forman gotas, caen y salpican; sus ciclos coinciden al cerrar el bucle.
+
+El título aparece arriba a la izquierda, **INICIAR** abajo a la derecha y **CÓMO JUGAR** abajo a la izquierda. El tutorial tiene tres páginas de instrucciones sobre dibujo, combate y compra/equipamiento, sin contenido narrativo. La celda continúa animada mientras se consulta; iniciar una partida oculta la escena y detiene su actualización.
+
+- `scenes/menu_cell.tscn` y `scripts/menu_cell.gd`: capas del escenario, poses y gotas.
+- `scripts/menu_ui.gd`: título e instrucciones ilustradas.
+- `tools/build_menu_assets.py`: regenera los cuatro PNG del menú con Python 3 y Pillow; no es necesario para jugar.
+
+Se comprobaron el renderizado real en Godot, las páginas del tutorial, los botones, el cierre del bucle y la detención al iniciar. Sigue pendiente comprobarlo en un teléfono físico.
+
+![Menú animado — fotograma](docs/menu.png)
+
+[Ver el tutorial](docs/tutorial.png).

@@ -9,6 +9,8 @@ const COLORS = [Color("ff9466"), Color("ffdb77"), Color("83b8ff"), Color("8de9b0
 const COOLDOWNS = [1.4, 2.8, 4.0, 6.0, 3.0, 5.0]
 const DRAW_AREA = Rect2(20, 526, 440, 274)
 @onready var arena: BattleArena = $BattleArena
+@onready var menu_cell: MenuCell = $MenuCell
+var tutorial_page := 0
 var pending_outcome := ""
 var equipped: Array = [0, 1, 2]
 var owned: Array = [0, 1, 2]
@@ -41,6 +43,7 @@ func _ready() -> void:
 func button(label: String, rect: Rect2, action: Callable, disabled := false) -> void:
 	var node := Button.new()
 	node.theme = preload("res://assets/pixel/ui_theme.tres")
+	node.z_index = 20
 	node.text = label
 	node.position = rect.position
 	node.size = rect.size
@@ -61,11 +64,21 @@ func button(label: String, rect: Rect2, action: Callable, disabled := false) -> 
 
 func build_buttons() -> void:
 	arena.visible = state in ["fight", "resolving"]
+	menu_cell.set_active(state in ["menu", "tutorial"])
 	for node in controls:
+		node.disabled = true
 		node.queue_free()
 	controls.clear()
 	if state == "menu":
-		button("INICIAR LA FUGA", Rect2(50, 695, 380, 60), new_run)
+		button("CÓMO JUGAR", Rect2(20, 818, 152, 54), open_tutorial)
+		button("INICIAR", Rect2(324, 818, 136, 54), new_run)
+	elif state == "tutorial":
+		button("CERRAR", Rect2(20, 818, 112, 54), close_tutorial)
+		button("ANTERIOR", Rect2(148, 818, 136, 54), func(): change_tutorial_page(-1), tutorial_page == 0)
+		if tutorial_page < 2:
+			button("SIGUIENTE", Rect2(300, 818, 160, 54), func(): change_tutorial_page(1))
+		else:
+			button("INICIAR", Rect2(324, 818, 136, 54), new_run)
 	elif state == "shop":
 		for slot in 3:
 			var slot_id := slot
@@ -82,6 +95,23 @@ func build_buttons() -> void:
 		button("SIGUIENTE COMBATE", Rect2(30, 752, 420, 56), start_battle)
 	elif state in ["dead", "victory"]:
 		button("VOLVER A INTENTAR" if state == "dead" else "NUEVO INTENTO", Rect2(45, 650, 390, 60), new_run)
+
+func open_tutorial() -> void:
+	if state != "menu":
+		return
+	tutorial_page = 0
+	state = "tutorial"
+	build_buttons()
+
+func close_tutorial() -> void:
+	if state != "tutorial":
+		return
+	state = "menu"
+	build_buttons()
+
+func change_tutorial_page(direction: int) -> void:
+	tutorial_page = clampi(tutorial_page + direction, 0, 2)
+	build_buttons()
 
 func new_run() -> void:
 	hp = 100
@@ -155,6 +185,7 @@ func _process(delta: float) -> void:
 				build_buttons()
 	queue_redraw()
 	$BattleHUD.queue_redraw()
+	$MenuUI.queue_redraw()
 
 func _input(event: InputEvent) -> void:
 	if state != "fight":
@@ -271,20 +302,8 @@ func bar(rect: Rect2, ratio: float, color: Color) -> void:
 
 func _draw() -> void:
 	prison_background()
-	if state == "menu":
-		panel(Rect2(28, 40, 424, 122), Color("263e43"))
-		text("FUGA RÚNICA", Vector2(80, 104), 48, Color("edd5a0"))
-		text("UN APRENDIZ / UNA CONDENA EQUIVOCADA", Vector2(86, 140), 16, Color("a5c7bc"))
-		tableau(184)
-		panel(Rect2(28, 496, 424, 162))
-		text("TRES RUNAS PARA ESCAPAR", Vector2(54, 526), 16, Color("edd5a0"))
-		for id in 3:
-			glyph(id, Vector2(76 + id * 135, 546), 36, COLORS[id])
-		text("DIBUJA DESDE EL PUNTO BLANCO", Vector2(58, 616), 16)
-		text("SUELTA PARA LANZAR EL HECHIZO", Vector2(58, 640), 16)
-		panel(Rect2(42, 784, 396, 64))
-		text("BLOQUE 01 / CINCO PRESOS", Vector2(72, 810), 16, Color("edd5a0"))
-		text("TU PRIMER PASO HACIA LA SALIDA", Vector2(58, 834), 16)
+	if state in ["menu", "tutorial"]:
+		return
 	elif state in ["fight", "resolving"]:
 		panel(Rect2(8, 8, 464, 82), Color("203341"))
 		text("BLOQUE 01 / NIVEL %02d/15" % (arena.enemy_index + 1), Vector2(16, 32), 18, Color("b5ccbf"))
