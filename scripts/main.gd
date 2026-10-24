@@ -128,7 +128,7 @@ func start_battle() -> void:
 	arena.reset(battle - 1)
 	encounter = Campaign.encounter(battle)
 	enemy_max = encounter.hp
-	enemy_ward = 20 if encounter.pattern == "ward" else 0
+	enemy_ward = encounter.get("ward", 20 if encounter.pattern == "ward" else 0)
 	attack_count = 0
 	enraged = false
 	enemy_hp = enemy_max
@@ -170,13 +170,18 @@ func _process(delta: float) -> void:
 			attack_timer -= delta
 		if attack_timer <= 0:
 			var damage := next_damage()
-			arena.play_spell(enemy_spell_id(), false)
+			var spell := enemy_spell_id()
+			arena.play_spell(spell, false)
+			if spell == 3:
+				enemy_hp = mini(enemy_max, enemy_hp + 24)
+			elif spell == 2:
+				enemy_ward = mini(48, enemy_ward + 24)
 			attack_count += 1
 			var blocked := mini(shield, damage)
 			shield -= blocked
 			hp = maxi(0, hp - damage + blocked)
 			attack_timer = next_interval()
-			message = "¡Magia clandestina! −%d vida" % (damage - blocked)
+			message = "El rival recupera 24 de vida." if spell == 3 else ("El rival levanta una barrera." if spell == 2 else "¡Magia clandestina! −%d vida" % (damage - blocked))
 			if hp <= 0:
 				state = "resolving"
 				pending_outcome = "dead"
@@ -237,10 +242,10 @@ func cast_spell(id: int) -> void:
 	var absorbed := mini(enemy_ward, damage_dealt)
 	enemy_ward -= absorbed
 	enemy_hp += absorbed
-	if encounter.pattern == "elite" and not enraged and enemy_hp > 0 and enemy_hp <= enemy_max / 2:
+	if encounter.pattern in ["elite", "boss"] and not enraged and enemy_hp > 0 and enemy_hp <= enemy_max / 2:
 		enraged = true
 		attack_timer = minf(attack_timer, 2.5)
-		message = "¡Mazas entra en furia! Sus ataques se aceleran."
+		message = "¡Furia! El rival acelera sus ataques."
 	if enemy_hp <= 0:
 		last_reward = 35 + battle * 5 + (20 if battle % 5 == 0 else 0)
 		coins += last_reward
@@ -254,6 +259,8 @@ func cast_spell(id: int) -> void:
 		build_buttons()
 
 func enemy_spell_id() -> int:
+	if encounter.has("spells"):
+		return encounter.spells[attack_count % encounter.spells.size()]
 	# Rivals use the same hand language for their visible spell effect.
 	match encounter.pattern:
 		"quick", "double": return 1
@@ -262,6 +269,8 @@ func enemy_spell_id() -> int:
 	return 0
 
 func next_damage() -> int:
+	if encounter.has("damages"):
+		return encounter.damages[attack_count % encounter.damages.size()]
 	if encounter.pattern == "elite" and attack_count % 2 == 1:
 		return 26
 	return encounter.damage
@@ -355,10 +364,10 @@ func _draw() -> void:
 		text("LAS RUNAS EQUIPADAS SE INTERCAMBIAN", Vector2(30, 850), 16, Color("a0aec9"))
 	else:
 		panel(Rect2(24, 46, 432, 118))
-		text("CORREDOR LIBRE" if state == "victory" else "FUGA INTERRUMPIDA", Vector2(42, 104), 32, Color("edd5a0"))
-		text("MAZAS HA CAÍDO" if state == "victory" else "TE DEVOLVIERON A LA CELDA", Vector2(44, 142), 16)
+		text("BLOQUE SUPERADO" if state == "victory" else "FUGA INTERRUMPIDA", Vector2(42, 104), 32, Color("edd5a0"))
+		text("EL SÍNDICO HA CAÍDO" if state == "victory" else "TE DEVOLVIERON A LA CELDA", Vector2(44, 142), 16)
 		tableau(186)
 		panel(Rect2(28, 500, 424, 116))
 		text("MONEDAS: %d" % coins, Vector2(48, 532), 16, Color("edd5a0"))
-		text("FIN DE LA DEMO / NIVELES 1 A 5" if state == "victory" else "PRUEBA OTRA COMBINACIÓN DE RUNAS", Vector2(48, 560), 16)
-		text("EL JEFE DEL BLOQUE SIGUE ESPERANDO" if state == "victory" else "CADA INTENTO ES UNA NUEVA OPORTUNIDAD", Vector2(48, 588), 16)
+		text("ETAPA 1 COMPLETA / 15 NIVELES" if state == "victory" else "PRUEBA OTRA COMBINACIÓN DE RUNAS", Vector2(48, 560), 16)
+		text("PRÓXIMAMENTE: PATIO Y TALLERES" if state == "victory" else "CADA INTENTO ES UNA NUEVA OPORTUNIDAD", Vector2(48, 588), 16)

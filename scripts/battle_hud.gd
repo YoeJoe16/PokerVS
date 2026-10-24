@@ -21,10 +21,10 @@ func _draw() -> void:
 	text(game.encounter.name, Vector2(24, 235), 16, Color("e9d3ac"))
 	bar(Rect2(24, 247, 176, 8), maxf(0, game.enemy_hp) / float(game.enemy_max), Color("dca588"))
 	text("%d" % maxi(0, game.enemy_hp), Vector2(211, 256), 14)
-	text("ÉLITE" if game.encounter.pattern == "elite" else "PRESO", Vector2(24, 273), 12, Color("b0b9b8"))
+	text("JEFE" if game.encounter.pattern == "boss" else ("ÉLITE" if game.encounter.pattern == "elite" else "PRESO"), Vector2(24, 273), 12, Color("b0b9b8"))
 	if game.enemy_ward > 0:
 		text("Barrera %d" % game.enemy_ward, Vector2(95, 273), 12)
 	panel(Rect2(216, 396, 250, 84), Color("172638"))
-	text("Congelado" if game.frozen > 0 else ("Preparando golpe cargado" if game.next_damage() == 26 else "Preparando ataque"), Vector2(228, 418), 15, Color("e7c28f"))
+	text("Congelado" if game.frozen > 0 else ("Preparando curación" if game.enemy_spell_id() == 3 else ("Preparando barrera" if game.enemy_spell_id() == 2 else "Golpe: %d de daño" % game.next_damage())), Vector2(228, 418), 15, Color("e7c28f"))
 	text("%.1f s" % maxf(0, game.attack_timer), Vector2(228, 443), 20)
 	text("Lanzando…" if game.arena.player_spell >= 0 else "Dibuja abajo para lanzar", Vector2(228, 467), 14, Color("a5c9bc"))

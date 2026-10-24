@@ -145,7 +145,7 @@ func run() -> void:
 	scene.select_spell(5)
 	scene.cast_spell(5)
 	check(scene.cooldown[5] > 0, "Explosion starts cooldown")
-	for step in 100:
+	for step in 300:
 		if scene.state == "victory":
 			break
 		if scene.state == "shop":
@@ -154,7 +154,7 @@ func run() -> void:
 		scene.cast_spell(1)
 		finish_visuals(scene)
 	await process_frame
-	check(scene.battle == 6, "Five victories complete opening demo")
+	check(scene.battle == 16 and scene.state == "victory", "Fifteen victories complete first stage")
 	scene.battle = 3
 	scene.start_battle()
 	scene.equipped = [0, 1, 2]
@@ -181,7 +181,47 @@ func run() -> void:
 	scene.cooldown.fill(0.0)
 	scene.cast_spell(0)
 	finish_visuals(scene)
-	check(scene.last_reward == 80 and scene.state == "victory", "Elite pays bonus and ends demo, not campaign")
+	check(scene.last_reward == 80 and scene.state == "shop" and scene.battle == 6, "First elite pays bonus and opens level six")
+	for level in range(6, 16):
+		scene.battle = level
+		scene.start_battle()
+		check(scene.arena.enemy_index == level - 1 and scene.arena.opponent.texture == BattleArena.ENEMIES[level - 1], "Correct enemy sprite at level %d" % level)
+		check(scene.enemy_hp == Campaign.encounter(level).hp, "Authored health at level %d" % level)
+	for level in [9, 14]:
+		scene.battle = level
+		scene.start_battle()
+		scene.enemy_hp -= 50
+		scene.attack_count = 2
+		scene.attack_timer = 0
+		var health: int = scene.hp
+		scene._process(0.01)
+		check(scene.enemy_hp == scene.enemy_max - 26 and scene.hp == health and scene.arena.enemy_spell == 3, "Healer restores health instead of damaging player %d" % level)
+	scene.battle = 10
+	scene.start_battle()
+	scene.attack_count = 1
+	check(scene.next_damage() == 30 and scene.enemy_spell_id() == 5, "Second elite telegraphs charged explosion")
+	scene.enemy_hp = 140
+	scene.cast_spell(0)
+	check(scene.enraged, "Second elite enrages")
+	scene.battle = 15
+	scene.start_battle()
+	scene.attack_count = 1
+	scene.attack_timer = 0
+	var health: int = scene.hp
+	scene._process(0.01)
+	check(scene.enemy_ward == 24 and scene.hp == health and scene.arena.enemy_spell == 2, "Boss spends a turn raising a barrier")
+	scene.attack_count = 3
+	check(scene.next_damage() == 32 and scene.enemy_spell_id() == 5, "Boss cycle finishes with explosion")
+	scene.enemy_ward = 0
+	scene.enemy_hp = 215
+	scene.cast_spell(0)
+	check(scene.enraged and is_equal_approx(scene.next_interval(), 2.8), "Boss second phase accelerates cycle")
+	scene.enemy_hp = 1
+	scene.cooldown.fill(0.0)
+	scene.cast_spell(0)
+	check(scene.state == "resolving", "Boss defeat waits for final gesture")
+	finish_visuals(scene)
+	check(scene.state == "victory" and scene.battle == 16 and scene.last_reward == 130, "Boss ends stage and awards bonus")
 	for id in 6:
 		scene.new_run()
 		scene.equipped = [id, (id + 1) % 6, (id + 2) % 6]

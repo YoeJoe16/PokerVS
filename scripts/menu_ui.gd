@@ -80,7 +80,7 @@ func _draw() -> void:
 			], 262)
 			draw_rect(Rect2(44, 448, 392, 2), Color("435e69"))
 			lines([
-				"ESTA DEMO INCLUYE CINCO COMBATES.",
+				"LA PRIMERA ETAPA TIENE 15 COMBATES.",
 				"SIN VIDA, TERMINA EL INTENTO.",
 				"AL REINICIAR PIERDES LAS MONEDAS",
 				"Y LOS HECHIZOS QUE COMPRASTE."

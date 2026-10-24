@@ -5,7 +5,7 @@ extends Node2D
 const CAST_DURATION := 0.9
 const IMPACT_TIME := 0.48
 const SPELL_COLORS = [Color("ffa96a"), Color("ffe39a"), Color("85c4f2"), Color("9fe2ad"), Color("9ee9ef"), Color("caabef")]
-const ENEMIES = [preload("res://assets/pixel/collector.png"), preload("res://assets/pixel/spark.png"), preload("res://assets/pixel/mender.png"), preload("res://assets/pixel/chalk.png"), preload("res://assets/pixel/mazas.png")]
+const ENEMIES = [preload("res://assets/pixel/collector.png"), preload("res://assets/pixel/spark.png"), preload("res://assets/pixel/mender.png"), preload("res://assets/pixel/chalk.png"), preload("res://assets/pixel/mazas.png"), preload("res://assets/pixel/ember.png"), preload("res://assets/pixel/needle.png"), preload("res://assets/pixel/mist.png"), preload("res://assets/pixel/stitch.png"), preload("res://assets/pixel/locksmith.png"), preload("res://assets/pixel/ash.png"), preload("res://assets/pixel/echo.png"), preload("res://assets/pixel/wall.png"), preload("res://assets/pixel/suture.png"), preload("res://assets/pixel/syndic.png")]
 @onready var player: Sprite2D = $Apprentice
 @onready var opponent: Sprite2D = $Opponent
 var player_queue: Array[int] = []
@@ -26,7 +26,7 @@ func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
 func reset(index: int) -> void:
-	enemy_index = clampi(index, 0, 4)
+	enemy_index = clampi(index, 0, ENEMIES.size() - 1)
 	opponent.texture = ENEMIES[enemy_index]
 	player_queue.clear()
 	enemy_queue.clear()

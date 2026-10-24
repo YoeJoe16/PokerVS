@@ -20,11 +20,24 @@ PALETTES = [
     ('mender', '#76a293', '#465e75', '#b7c8a1', '#caa28c', '#8e6471', '#656273'),
     ('chalk', '#8c79aa', '#534f7b', '#b7a4d1', '#d0a98d', '#8e6b77', '#293a53'),
     ('mazas', '#af6556', '#694354', '#df9b6c', '#b58067', '#74535e', '#48394d'),
+    ('ember', '#d29369', '#485365', '#d5c5a2', '#bb977e', '#745b64', '#354253'),
+    ('needle', '#b8c3a0', '#485365', '#d5c5a2', '#bb977e', '#745b64', '#354253'),
+    ('mist', '#85bcc6', '#485365', '#d5c5a2', '#bb977e', '#745b64', '#354253'),
+    ('stitch', '#91c3a6', '#485365', '#d5c5a2', '#bb977e', '#745b64', '#354253'),
+    ('locksmith', '#e2c27e', '#485365', '#d5c5a2', '#bb977e', '#745b64', '#354253'),
+    ('ash', '#c19b9d', '#485365', '#d5c5a2', '#bb977e', '#745b64', '#354253'),
+    ('echo', '#b6a5d0', '#485365', '#d5c5a2', '#bb977e', '#745b64', '#354253'),
+    ('wall', '#a7b6b5', '#485365', '#d5c5a2', '#bb977e', '#745b64', '#354253'),
+    ('suture', '#9ac6af', '#485365', '#d5c5a2', '#bb977e', '#745b64', '#354253'),
+    ('syndic', '#d6aa78', '#485365', '#d5c5a2', '#bb977e', '#745b64', '#354253'),
 ]
 
 
 def sprite(kind, pose):
     name, coat, shade, light, skin, skin_shade, hair = PALETTES[kind]
+    variant = kind
+    if kind >= 6:
+        kind = [2, 3, 4, 3, 5, 1, 4, 5, 3, 5][kind - 6]
     im = Image.new('RGBA', (64, 72))
     d = ImageDraw.Draw(im)
     broad = 4 if kind == 5 else (1 if kind == 1 else 0)
@@ -101,6 +114,36 @@ def sprite(kind, pose):
         rect((28,16,31,17),INK); rect((36,16,39,17),INK)
         rect((29,16,30,16),'#f4e4c4'); rect((37,16,38,16),'#f4e4c4')
         rect((33,18,34,20),skin_shade)
+    if variant >= 6:
+        # Details stay attached to the breathing head/torso in every casting pose.
+        if name == 'ember':
+            rect((23,20,40,24), '#724441'); rect((26,21,37,21), '#df9e64')
+        elif name == 'needle':
+            poly([(38,8),(44,3),(45,13),(41,20)], hair, INK)
+            rect((26,15,40,16), '#adb9bc')
+        elif name == 'mist':
+            rect((25,19,40,24), '#92c4ca'); rect((28,20,37,21), '#d2e9d9')
+        elif name == 'stitch':
+            rect((24,7,39,11), '#718d88'); rect((29,7,34,9), '#d2c798')
+            rect((26,16,31,19), '#243e49'); rect((27,17,30,18), '#8bc6ba')
+        elif name == 'locksmith':
+            poly([(23,12),(21,4),(27,6),(32,2),(38,6),(42,4),(40,12)], '#bd9a59', INK)
+            rect((32,39,36,44), '#e1c882'); rect((33,41,34,42), INK)
+        elif name == 'ash':
+            rect((22,12,40,14), '#c4b6ab'); rect((24,19,27,23), '#8a777b')
+        elif name == 'echo':
+            for x in (20,41): rect((x,14,x+3,23), '#a9a0c5')
+            rect((25,8,38,10), '#a9a0c5')
+        elif name == 'wall':
+            rect((17,29,25,34), '#a5b4ae'); rect((39,29,47,34), '#a5b4ae')
+            rect((24,12,40,15), '#748b91')
+        elif name == 'suture':
+            rect((24,13,40,16), '#d0c8ad'); rect((34,14,39,15), INK)
+            rect((28,19,38,23), '#8cab9c')
+        elif name == 'syndic':
+            poly([(20,27),(28,30),(32,40),(37,30),(44,27),(42,37),(32,46),(22,37)], '#d2b47d', INK)
+            rect((24,9,39,12), '#c4c1af'); rect((28,22,38,26), '#c4c1af')
+            rect((26,15,31,18), '#e2c98d'); rect((35,15,40,18), '#e2c98d')
     body = im.copy()
     if kind == 0:
         im = Image.new("RGBA", (64, 72))
@@ -260,10 +303,10 @@ for x,y in [(2,2),(28,2),(2,28),(28,28)]: q.rectangle((x,y,x+1,y+1),fill='#d6c7a
 icon.resize((128,128),Image.Resampling.NEAREST).save(OUT/'app_icon.png')
 # Optional review contact sheet; PNG runtime assets above need no tooling at runtime.
 if args.preview:
-    preview=Image.new('RGB',(64*6,72*3),'#202d40')
-    for kind in range(6):
+    preview=Image.new('RGB',(64*len(PALETTES),72*3),'#202d40')
+    for kind in range(len(PALETTES)):
         for row,pose in enumerate(('idle','fire','blast')):
             preview.paste(sprite(kind,pose),(kind*64,row*72),sprite(kind,pose))
     args.preview.parent.mkdir(parents=True, exist_ok=True)
-    preview.resize((768,432),Image.Resampling.NEAREST).save(args.preview)
-print('Generated six original 11-frame sheets and cell block background.')
+    preview.resize((128*len(PALETTES),432),Image.Resampling.NEAREST).save(args.preview)
+print('Generated sixteen original 11-frame sheets and cell block background.')
