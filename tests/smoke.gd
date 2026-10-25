@@ -34,11 +34,11 @@ func run() -> void:
 	for character in "áéíóúüñÁÉÍÓÚÜÑ¡¿":
 		check(pixel_font.has_char(character.unicode_at(0)), "Pixel font supports " + character)
 	var patterns := Gestures.templates()
-	for id in 6:
+	for id in SpellBook.NAMES.size():
 		var transformed: Array = []
 		for point in patterns[id]:
 			transformed.append(point * 130 + Vector2(70, 530))
-		check(Gestures.recognize(transformed, [0, 1, 2, 3, 4, 5]) == id, "Recognizes translated/scaled spell %d" % id)
+		check(Gestures.recognize(transformed, range(SpellBook.NAMES.size())) == id, "Recognizes translated/scaled spell %d" % id)
 	check(Gestures.recognize([], [0, 1, 2]) == -1, "Empty gesture rejected")
 	check(Gestures.recognize([Vector2.ZERO, Vector2.ZERO], [0, 1, 2]) == -1, "Stationary gesture rejected")
 	check(Gestures.recognize(patterns[3], [0, 1, 2]) == -1, "Unequipped healing gesture rejected")
@@ -124,6 +124,8 @@ func run() -> void:
 	finish_visuals(scene)
 	await process_frame
 	check(scene.state == "shop" and scene.coins == 40 and scene.battle == 2, "Victory grants coins and opens shop")
+	scene.shop_offers = [4, 5, 6]
+	scene.coins = 60
 	scene.select_spell(4)
 	check(scene.coins == 5 and 4 in scene.owned and scene.equipped[0] == 4, "Purchase equips ice in selected slot")
 	scene.select_spell(5)
@@ -137,12 +139,16 @@ func run() -> void:
 	check(scene.attack_timer == timer, "Ice pauses enemy attacks")
 	scene.owned.append(3)
 	scene.selected_slot = 2
+	scene.state = "shop"
 	scene.select_spell(3)
+	scene.state = "fight"
 	scene.hp = 50
 	scene.cast_spell(3)
 	check(scene.hp == 76, "Healing restores health")
 	scene.owned.append(5)
+	scene.state = "shop"
 	scene.select_spell(5)
+	scene.state = "fight"
 	scene.cast_spell(5)
 	check(scene.cooldown[5] > 0, "Explosion starts cooldown")
 	for step in 300:

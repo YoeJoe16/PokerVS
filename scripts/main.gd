@@ -3,10 +3,11 @@ extends Node2D
 const UI = preload("res://scripts/pixel_ui.gd")
 const Campaign = preload("res://scripts/campaign.gd")
 const Gestures = preload("res://scripts/gestures.gd")
-const NAMES = ["Fuego", "Rayo", "Escudo", "Curación", "Hielo", "Explosión"]
-const DESCRIPTIONS = ["28 de daño · 1.4 s", "42 de daño · 2.8 s", "+24 barrera · 4 s", "+26 vida · 6 s", "16 daño + frena · 3 s", "60 de daño · 5 s"]
-const COLORS = [Color("ff9466"), Color("ffdb77"), Color("83b8ff"), Color("8de9b0"), Color("7be8ed"), Color("d7a0ff")]
-const COOLDOWNS = [1.4, 2.8, 4.0, 6.0, 3.0, 5.0]
+const Book = preload("res://scripts/spells.gd")
+const NAMES = Book.NAMES
+const DESCRIPTIONS = Book.DESCRIPTIONS
+const COLORS = Book.COLORS
+const COOLDOWNS = Book.COOLDOWNS
 const DRAW_AREA = Rect2(20, 526, 440, 274)
 @onready var arena: BattleArena = $BattleArena
 @onready var menu_cell: MenuCell = $MenuCell
@@ -14,7 +15,12 @@ var tutorial_page := 0
 var pending_outcome := ""
 var equipped: Array = [0, 1, 2]
 var owned: Array = [0, 1, 2]
-var cooldown: Array = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+var cooldown: Array = []
+var shop_offers: Array = []
+var shop_inventory := false
+var inventory_page := 0
+var shop_rng := RandomNumberGenerator.new()
+var paralyzed := 0.0
 var state := "menu"
 var hp := 100
 var shield := 0
@@ -37,6 +43,9 @@ var controls: Array[Button] = []
 var font = UI.FONT
 
 func _ready() -> void:
+	cooldown.resize(NAMES.size())
+	cooldown.fill(0.0)
+	shop_rng.randomize()
 	RenderingServer.set_default_clear_color(Color("111a21"))
 	build_buttons()
 
@@ -86,15 +95,28 @@ func build_buttons() -> void:
 			if slot == selected_slot:
 				controls[-1].add_theme_color_override("font_color", Color("ffe3a0"))
 				controls[-1].add_theme_stylebox_override("normal", UI.box(Color("ffe3a0")))
-		for id in 6:
-			var spell_id := id
-			var label: String = "Equipar" if id in owned else "Comprar · 35"
+		button("OFERTAS" if shop_inventory else "MIS RUNAS", Rect2(20, 208, 170, 36), toggle_inventory)
+		if shop_inventory:
+			button("<", Rect2(316, 208, 60, 36), func(): inventory_page = maxi(0, inventory_page - 1); build_buttons(), inventory_page == 0)
+			button(">", Rect2(394, 208, 60, 36), func(): inventory_page += 1; build_buttons(), (inventory_page + 1) * 3 >= owned.size())
+		var shown := shop_items()
+		for row in shown.size():
+			var id: int = shown[row]
+			var label := "EQUIPAR" if id in owned else "%d MONEDAS" % Book.price(id)
 			if id == equipped[selected_slot]:
-				label = "Equipado"
-			button(label, Rect2(306, 240 + id * 75, 158, 46), func(): select_spell(spell_id), (id not in owned and coins < 35) or id == equipped[selected_slot])
+				label = "EQUIPADO"
+			button(label, Rect2(292, 266 + row * 148, 160, 42), func(): select_spell(id), (id not in owned and coins < Book.price(id)) or id == equipped[selected_slot])
 		button("SIGUIENTE COMBATE", Rect2(30, 752, 420, 56), start_battle)
 	elif state in ["dead", "victory"]:
 		button("VOLVER A INTENTAR" if state == "dead" else "NUEVO INTENTO", Rect2(45, 650, 390, 60), new_run)
+
+func shop_items() -> Array:
+	return owned.slice(inventory_page * 3, inventory_page * 3 + 3) if shop_inventory else shop_offers
+
+func toggle_inventory() -> void:
+	shop_inventory = not shop_inventory
+	inventory_page = 0
+	build_buttons()
 
 func open_tutorial() -> void:
 	if state != "menu":
@@ -118,6 +140,9 @@ func new_run() -> void:
 	shield = 0
 	coins = 0
 	battle = 1
+	shop_offers.clear()
+	shop_inventory = false
+	inventory_page = 0
 	owned = [0, 1, 2]
 	equipped = [0, 1, 2]
 	start_battle()
@@ -134,6 +159,7 @@ func start_battle() -> void:
 	enemy_hp = enemy_max
 	attack_timer = encounter.interval
 	frozen = 0
+	paralyzed = 0
 	cooldown.fill(0.0)
 	stroke.clear()
 	drawing = false
@@ -141,10 +167,12 @@ func start_battle() -> void:
 	build_buttons()
 
 func select_spell(id: int) -> void:
+	if state != "shop" or id < 0 or id >= NAMES.size():
+		return
 	if id not in owned:
-		if coins < 35:
+		if id not in shop_offers or coins < Book.price(id):
 			return
-		coins -= 35
+		coins -= Book.price(id)
 		owned.append(id)
 	var previous: int = equipped[selected_slot]
 	var other := equipped.find(id)
@@ -159,10 +187,15 @@ func _process(delta: float) -> void:
 	arena.opponent_barrier = enemy_ward > 0
 	if state == "resolving" and not arena.is_busy():
 		state = pending_outcome
+		if state == "shop":
+			shop_offers = Book.offers(owned, shop_rng)
+			shop_inventory = false
+			inventory_page = 0
 		pending_outcome = ""
 		build_buttons()
 	if state == "fight":
-		for id in 6:
+		paralyzed = maxf(0.0, paralyzed - delta)
+		for id in NAMES.size():
 			cooldown[id] = maxf(0, cooldown[id] - delta)
 		if frozen > 0:
 			frozen -= delta
@@ -193,7 +226,7 @@ func _process(delta: float) -> void:
 	$MenuUI.queue_redraw()
 
 func _input(event: InputEvent) -> void:
-	if state != "fight":
+	if state != "fight" or paralyzed > 0:
 		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed and DRAW_AREA.has_point(event.position):
@@ -220,7 +253,7 @@ func _input(event: InputEvent) -> void:
 			message = "Mantén el trazo dentro del panel."
 
 func cast_spell(id: int) -> void:
-	if state != "fight" or id not in equipped:
+	if state != "fight" or id not in equipped or paralyzed > 0:
 		return
 	if cooldown[id] > 0:
 		message = "%s se está recargando." % NAMES[id]
@@ -229,23 +262,44 @@ func cast_spell(id: int) -> void:
 	cooldown[id] = COOLDOWNS[id]
 	message = "¡%s!" % NAMES[id]
 	var health_before := enemy_hp
+	enemy_hp -= Book.DAMAGE[id]
 	match id:
-		0: enemy_hp -= 28
-		1: enemy_hp -= 42
 		2: shield = mini(48, shield + 24)
 		3: hp = mini(100, hp + 26)
-		4:
-			enemy_hp -= 16
-			frozen = 2.5
-		5: enemy_hp -= 60
+		4: frozen = maxf(frozen, 2.5)
+		7: frozen = maxf(frozen, 0.6)
+		8:
+			hp = mini(100, hp + 18)
+			shield = mini(48, shield + 12)
+		10: frozen = maxf(frozen, 4.0)
+		12:
+			shield = 48
+			hp = mini(100, hp + 20)
+		14:
+			hp = maxi(0, hp - 34)
+			message = "¡Sangre! Sacrificas 34 de vida."
+		15:
+			paralyzed = 3.0
+			drawing = false
+			stroke.clear()
+			message = "¡Vacío! No puedes lanzar durante 3 s."
 	var damage_dealt := health_before - enemy_hp
-	var absorbed := mini(enemy_ward, damage_dealt)
+	var absorbed := 0 if id == 9 else mini(enemy_ward, damage_dealt)
 	enemy_ward -= absorbed
 	enemy_hp += absorbed
 	if encounter.pattern in ["elite", "boss"] and not enraged and enemy_hp > 0 and enemy_hp <= enemy_max / 2:
 		enraged = true
 		attack_timer = minf(attack_timer, 2.5)
 		message = "¡Furia! El rival acelera sus ataques."
+	# Sacrifice can kill the caster, even when the same spell defeats the rival.
+	if hp <= 0:
+		state = "resolving"
+		pending_outcome = "dead"
+		arena.player_defeated = true
+		arena.opponent_defeated = enemy_hp <= 0
+		drawing = false
+		build_buttons()
+		return
 	if enemy_hp <= 0:
 		last_reward = 35 + battle * 5 + (20 if battle % 5 == 0 else 0)
 		coins += last_reward
@@ -328,7 +382,7 @@ func _draw() -> void:
 			panel(Rect2(x, 98, 146, 94), Color("202e43"))
 			glyph(id, Vector2(x + 13, 114), 37, COLORS[id] if cooldown[id] <= 0 else Color("65708b"))
 			text(NAMES[id], Vector2(x + 59, 126), 16, COLORS[id])
-			text("Listo" if cooldown[id] <= 0 else "%.1f s" % cooldown[id], Vector2(x + 59, 150), 15)
+			text("BLOQ." if paralyzed > 0 else ("Listo" if cooldown[id] <= 0 else "%.1f s" % cooldown[id]), Vector2(x + 59, 150), 15)
 			bar(Rect2(x + 12, 174, 122, 5), 1 - cooldown[id] / COOLDOWNS[id], COLORS[id])
 		# Arena and sprites are scene nodes; information overlays are in HUD.
 		text(encounter.hint, Vector2(20, 518), 14, Color("bacbc7"))
@@ -347,21 +401,27 @@ func _draw() -> void:
 			draw_rect(Rect2(stroke[0] - Vector2(3, 3), Vector2(6, 6)), Color.WHITE)
 		panel(Rect2(16, 814, 448, 66), Color("1c2c40"))
 		text(message, Vector2(25, 840), 14)
-		text("Furia activa" if enraged else "Presos / Bloque de celdas", Vector2(25, 864), 14, Color("93acaa"))
+		text("PARÁLISIS: %.1f s" % paralyzed if paralyzed > 0 else ("Furia activa" if enraged else "Presos / Bloque de celdas"), Vector2(25, 864), 14, Color("93acaa"))
 	elif state == "shop":
 		panel(Rect2(16, 16, 448, 124))
 		text("CONTRABANDO", Vector2(25, 52), 30, Color("a5c2ff"))
 		text("Victoria: +%d monedas · +12 vida" % last_reward, Vector2(25, 90), 20)
 		text("%d monedas · Vida %d · Próximo nivel %d/15" % [coins, hp, battle], Vector2(25, 121), 18, Color("ffdb77"))
-		text("ELIGE UN ESPACIO Y EQUIPA UNA RUNA", Vector2(25, 226), 18)
-		for id in 6:
-			var y := 248 + id * 75
-			panel(Rect2(16, y - 16, 448, 68), Color("263844"))
-			glyph(id, Vector2(25, y), 32, COLORS[id])
-			text(NAMES[id], Vector2(76, y + 13), 20, COLORS[id])
-			text(DESCRIPTIONS[id], Vector2(76, y + 39), 15)
-		text("Espacio seleccionado: %d" % (selected_slot + 1), Vector2(30, 725), 18, Color("ffdb77"))
-		text("LAS RUNAS EQUIPADAS SE INTERCAMBIAN", Vector2(30, 850), 16, Color("a0aec9"))
+		var shown := shop_items()
+		for row in shown.size():
+			var id: int = shown[row]
+			var y := 258 + row * 148
+			panel(Rect2(16, y, 448, 140), Color("263844"))
+			glyph(id, Vector2(28, y + 18), 42, COLORS[id])
+			text(NAMES[id], Vector2(84, y + 28), 16, COLORS[id])
+			text(Book.QUALITY_NAMES[Book.QUALITY[id]], Vector2(84, y + 52), 16, Book.QUALITY_COLORS[Book.QUALITY[id]])
+			text(DESCRIPTIONS[id] + " / %.1f s" % COOLDOWNS[id], Vector2(28, y + 88), 16)
+			text(Book.RISKS[id], Vector2(28, y + 116), 16, Color("ed819e"))
+		if shown.is_empty():
+			text("YA POSEES TODAS LAS RUNAS", Vector2(60, 350), 16)
+		text("ESPACIO SELECCIONADO: %d" % (selected_slot + 1), Vector2(30, 725), 16, Color("ffdb77"))
+		text("3 OFERTAS NUEVAS TRAS CADA VICTORIA", Vector2(30, 840), 16, Color("a0aec9"))
+		text("MIS RUNAS: EQUIPA LO QUE YA COMPRASTE", Vector2(30, 866), 16, Color("a0aec9"))
 	else:
 		panel(Rect2(24, 46, 432, 118))
 		text("BLOQUE SUPERADO" if state == "victory" else "FUGA INTERRUMPIDA", Vector2(42, 104), 32, Color("edd5a0"))

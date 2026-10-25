@@ -2,9 +2,9 @@ class_name BattleArena
 extends Node2D
 
 # Sprite sheet order: idle, breath, gather, six hand signs, hit, down.
+const Book = preload("res://scripts/spells.gd")
 const CAST_DURATION := 0.9
 const IMPACT_TIME := 0.48
-const SPELL_COLORS = [Color("ffa96a"), Color("ffe39a"), Color("85c4f2"), Color("9fe2ad"), Color("9ee9ef"), Color("caabef")]
 const ENEMIES = [preload("res://assets/pixel/collector.png"), preload("res://assets/pixel/spark.png"), preload("res://assets/pixel/mender.png"), preload("res://assets/pixel/chalk.png"), preload("res://assets/pixel/mazas.png"), preload("res://assets/pixel/ember.png"), preload("res://assets/pixel/needle.png"), preload("res://assets/pixel/mist.png"), preload("res://assets/pixel/stitch.png"), preload("res://assets/pixel/locksmith.png"), preload("res://assets/pixel/ash.png"), preload("res://assets/pixel/echo.png"), preload("res://assets/pixel/wall.png"), preload("res://assets/pixel/suture.png"), preload("res://assets/pixel/syndic.png")]
 @onready var player: Sprite2D = $Apprentice
 @onready var opponent: Sprite2D = $Opponent
@@ -42,7 +42,7 @@ func reset(index: int) -> void:
 	update_sprites()
 
 func play_spell(id: int, from_player := true) -> void:
-	assert(id >= 0 and id < 6)
+	assert(id >= 0 and id < Book.NAMES.size())
 	if from_player:
 		player_queue.append(id)
 	else:
@@ -80,7 +80,7 @@ func pose(spell: int, elapsed: float) -> int:
 		return int(clock * 2) % 2
 	if elapsed < 0.16 or elapsed > 0.78:
 		return 2
-	return 3 + spell
+	return 3 + Book.POSES[spell]
 
 func update_sprites() -> void:
 	player.frame = pose(player_spell, player_elapsed)
@@ -89,13 +89,13 @@ func update_sprites() -> void:
 	opponent.position = Vector2(344, 142)
 	player.modulate = Color.WHITE
 	opponent.modulate = Color("96cfe1") if opponent_frozen else Color.WHITE
-	if player_spell >= 0 and player_elapsed >= IMPACT_TIME and player_spell in [0, 1, 4, 5]:
+	if player_spell >= 0 and player_elapsed >= IMPACT_TIME and Book.DAMAGE[player_spell] > 0:
 		if player_elapsed < 0.68:
 			opponent.position.x += 2 if int(player_elapsed * 35) % 2 == 0 else -2
 			opponent.modulate = Color("ffd4ad")
 			if enemy_spell < 0:
 				opponent.frame = 9
-	if enemy_spell >= 0 and enemy_elapsed >= IMPACT_TIME and enemy_elapsed < 0.68:
+	if enemy_spell >= 0 and Book.DAMAGE[enemy_spell] > 0 and enemy_elapsed >= IMPACT_TIME and enemy_elapsed < 0.68:
 		player.position.x += -2 if int(enemy_elapsed * 35) % 2 == 0 else 2
 		player.modulate = Color("ffc7bc")
 		if player_spell < 0:
@@ -129,8 +129,8 @@ func _draw() -> void:
 
 func hand_origin(id: int, from_player: bool) -> Vector2:
 	var anchors := [Vector2(59, 27), Vector2(50, 4), Vector2(32, 30), Vector2(32, 30), Vector2(61, 32), Vector2(32, 18)]
-	var anchor: Vector2 = anchors[id]
-	if from_player and id == 3:
+	var anchor: Vector2 = anchors[Book.POSES[id]]
+	if from_player and Book.POSES[id] == 3:
 		anchor = Vector2(44, 23)
 	if not from_player:
 		anchor.x = 63 - anchor.x
@@ -143,7 +143,7 @@ func effect(id: int, elapsed: float, from_player: bool) -> void:
 	var sender: Sprite2D = player if from_player else opponent
 	var target := receiver.position + Vector2(0, -34) * receiver.scale
 	var caster := sender.position + Vector2(0, -34) * sender.scale
-	var color: Color = SPELL_COLORS[id]
+	var color: Color = Book.COLORS[id]
 	var travel := clampf((elapsed - 0.24) / 0.24, 0, 1)
 	if elapsed < 0.24:
 		if elapsed < 0.16:
@@ -152,7 +152,13 @@ func effect(id: int, elapsed: float, from_player: bool) -> void:
 			var angle := TAU * i / 5.0 + elapsed * 10
 			pixel(origin + Vector2(cos(angle), sin(angle)) * (18 - elapsed * 40), 4, color)
 		return
-	match id:
+	if id >= 6 and elapsed >= IMPACT_TIME:
+		var sigil := PackedVector2Array()
+		var center := target if Book.DAMAGE[id] > 0 else caster
+		for point in SpellGestures.templates()[id]:
+			sigil.append((center + (point - Vector2(0.5, 0.5)) * 64).snapped(Vector2(2, 2)))
+		draw_polyline(sigil, color, 4, false)
+	match Book.POSES[id]:
 		0:
 			var point := origin.lerp(target, travel).snapped(Vector2(2, 2))
 			if elapsed < 0.55:
@@ -187,7 +193,7 @@ func effect(id: int, elapsed: float, from_player: bool) -> void:
 			ring(center, 8 + travel * 20, color)
 			if elapsed >= IMPACT_TIME:
 				ring(target, 18 + (elapsed - IMPACT_TIME) * 80, Color("f0c9e5"))
-	if elapsed >= IMPACT_TIME and id in [0, 1, 4, 5]:
+	if elapsed >= IMPACT_TIME and Book.DAMAGE[id] > 0:
 		for i in 8:
 			var angle := TAU * i / 8.0
 			pixel(target + Vector2(cos(angle), sin(angle)) * (12 + (elapsed - IMPACT_TIME) * 90), 6 if id == 5 else 4, color)

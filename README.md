@@ -17,7 +17,7 @@ Las tres tarjetas superiores muestran tus gestos y su recarga. El enemigo ataca 
 | Hielo | V invertida desde abajo a la izquierda | 16 daño y congela 2,5 s | 3 s |
 | Explosión | L desde arriba a la izquierda | 60 daño | 5 s |
 
-Empiezas con fuego, rayo y escudo. Cada victoria otorga monedas y recupera 12 de vida. En el refugio selecciona uno de los tres espacios y compra un hechizo por 35 monedas, o equipa uno que ya posees. Equipar un hechizo que ya llevas intercambia los espacios. Puedes salir de la tienda sin comprar. La primera etapa completa cubre los niveles 1–15 del bloque de celdas. Todos los rivales son presos. Mazas (5) y La Cerrajera (10) son élites; El Síndico (15) es el jefe. Hay tienda entre combates y la victoria de etapa aparece únicamente tras derrotar al jefe. La tienda se presenta como contrabando entre presos.
+Empiezas con fuego, rayo y escudo. Cada victoria otorga monedas y recupera 12 de vida. En el refugio selecciona uno de los tres espacios y compra uno de los tres hechizos ofrecidos, o abre **Mis runas** para equipar uno que ya posees. Los precios dependen de la calidad. Equipar un hechizo que ya llevas intercambia los espacios. Puedes salir de la tienda sin comprar. La primera etapa completa cubre los niveles 1–15 del bloque de celdas. Todos los rivales son presos. Mazas (5) y La Cerrajera (10) son élites; El Síndico (15) es el jefe. Hay tienda entre combates y la victoria de etapa aparece únicamente tras derrotar al jefe. La tienda se presenta como contrabando entre presos.
 
 
 Las monedas y los hechizos comprados pertenecen a la partida actual. Reiniciar o cerrar el juego los borra. No hay todavía metaprogresión ni guardado.
@@ -34,7 +34,7 @@ Las monedas y los hechizos comprados pertenecen a la partida actual. Reiniciar o
 - `scripts/gestures.gd`: reconocimiento por remuestreo de 32 puntos y comparación con los hechizos equipados. Umbral configurable en `recognize`.
 - `tests/smoke.gd`: pruebas de reconocimiento y del flujo de una partida completa.
 
-Los gestos se definen en `templates()`. Para ampliar el catálogo habrá que mantener sincronizados sus datos y efectos en `main.gd`; conviene separarlos en recursos cuando crezca el prototipo. Los números actuales son de prueba, no un balance definitivo.
+Los gestos se definen en `templates()`. `scripts/spells.gd` centraliza nombres, calidades, precios, probabilidades, daño, recargas, colores y familias de poses; `main.gd` aplica los efectos adicionales. Al ampliar el catálogo, mantén alineados los IDs de las plantillas y del catálogo. Los números actuales son de prueba, no un balance definitivo.
 
 ## Validación en la nube
 
@@ -45,6 +45,7 @@ export XDG_CONFIG_HOME=/workspace/.config
 cd /workspace/PokerVS
 /workspace/.tools/godot-4.7/Godot_v4.7-stable_linux.x86_64 --headless --path . --editor --import
 /workspace/.tools/godot-4.7/Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/smoke.gd
+/workspace/.tools/godot-4.7/Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tests/spells.gd
 /workspace/.tools/godot-4.7/Godot_v4.7-stable_linux.x86_64 --headless --path . --quit-after 120
 ```
 
@@ -56,7 +57,7 @@ En otra máquina sustituye la ruta del ejecutable por tu Godot 4.7. Estas compro
 2. Configura OpenJDK 17 y Android SDK según la documentación de exportación Android de Godot. Define sus rutas en los ajustes del editor.
 3. En **Proyecto → Exportar**, añade un destino Android, establece un identificador de paquete propio y exporta un APK de depuración. No necesitas modificar escenas para pasar de ratón a tacto: está activada la emulación de ratón desde la pantalla táctil.
 4. Instala el APK en tu teléfono o usa el despliegue con USB y depuración USB habilitada.
-5. Verifica los seis gestos a distintas velocidades, las tres tarjetas en pantalla, las tiendas, las recargas, la derrota y la victoria. Comprueba especialmente márgenes y legibilidad en tu modelo.
+5. Verifica los dieciséis gestos a distintas velocidades, las tres tarjetas en pantalla y los costes de magia negra, las tiendas, las recargas, la derrota y la victoria. Comprueba especialmente márgenes y legibilidad en tu modelo.
 
 La ventana lógica es de 480 × 900, orientación vertical y proporción conservada; otras pantallas pueden mostrar bandas. Se usa el renderizador Compatibility para este prototipo 2D. No se ha generado ni probado un APK en este entorno y no se incluyen credenciales de firma.
 
@@ -152,3 +153,40 @@ Las curaciones y barreras consumen un turno sin causar daño. El HUD anuncia la 
 La victoria concede `35 + nivel × 5` monedas, más 20 en niveles 5, 10 y 15, y recupera hasta 12 de vida. Las tiendas conservan las compras y tres espacios de hechizos durante los 15 combates. Completar el bloque no abre todavía la segunda etapa. El equilibrio es provisional y requiere pruebas de dibujo en Android.
 
 [El Síndico en combate](docs/boss.png).
+
+## Calidades, ofertas y diez hechizos nuevos
+
+La tienda sortea **tres hechizos distintos que todavía no posees**, una sola vez tras cada victoria que lleva a una tienda. Cambiar de espacio, comprar o abrir **Mis runas** no renueva las ofertas. Una compra queda en esa tarjeta como equipable hasta el próximo combate; no puedes pagarla dos veces. Si quedan menos de tres hechizos sin comprar, se muestran los restantes; si tienes todos, se indica que la colección está completa. **Mis runas** pagina los hechizos adquiridos, de tres en tres, para equiparlos gratis. Sigues llevando exactamente tres y sin duplicados.
+
+| Calidad | Peso de aparición | Precio |
+| --- | --- | --- |
+| Común | 60 | 35 |
+| Raro | 24 | 55 |
+| Especial | 10 | 85 |
+| Legendario | 5 | 120 |
+| Magia negra | 1 | 150 |
+
+Para cada oferta se elige primero una calidad y luego un hechizo uniforme dentro de ella. Los pesos equivalen a 60/24/10/5/1 % cuando las cinco calidades tienen candidatos. Se excluyen los hechizos poseídos y los ya sorteados en esa tienda; al agotarse una calidad, se renormalizan los pesos restantes. No son porcentajes por tienda completa ni garantías de conseguir una calidad.
+
+Los iniciales Fuego y Escudo son comunes; Rayo, Curación e Hielo son raros; Explosión es especial. Las nuevas runas son:
+
+| Hechizo | Calidad | Gesto (desde el punto blanco) | Efecto | Recarga |
+| --- | --- | --- | --- | --- |
+| Roca | Común | Triángulo desde abajo a la izquierda | 22 daño | 1 s |
+| Viento | Común | Z desde arriba a la izquierda | 18 daño y frena 0,6 s | 1,8 s |
+| Brote | Raro | M desde abajo a la izquierda | +18 vida y +12 barrera | 5 s |
+| Lanza | Raro | > desde arriba a la izquierda | 60 daño, ignora la barrera | 4 s |
+| Glaciar | Especial | W desde arriba a la izquierda | 28 daño y frena 4 s | 6 s |
+| Trueno | Especial | N desde abajo a la izquierda | 90 daño | 6 s |
+| Égida | Legendario | Rombo horario desde arriba | +48 barrera y +20 vida | 9 s |
+| Meteoro | Legendario | Cuadrado horario desde arriba a la izquierda | 140 daño | 9 s |
+| Sangre | Magia negra | Estrella de cinco puntas desde arriba | 220 daño; sacrifica 34 vida | 12 s |
+| Vacío | Magia negra | Espiral cuadrada hacia dentro | 180 daño; parálisis propia de 3 s | 10 s |
+
+Todos se dibujan en un solo trazo. Los nuevos lanzamientos reutilizan las seis familias de gestos de manos, con colores propios y su runa pixelada al impactar. La vida no supera 100 y la barrera no supera 48. Lanza ignora la barrera enemiga sin consumirla. Las congelaciones no acortan una congelación más larga que siga activa.
+
+**Sangre** cuesta un tercio de la vida máxima, redondeado hacia arriba: 34 puntos cada lanzamiento. La barrera no absorbe este coste. Puede matarte; si ambos caen al mismo tiempo, pierdes y no cobras la victoria. **Vacío** bloquea nuevos dibujos y lanzamientos durante 3 segundos; los enemigos y las recargas siguen avanzando. El HUD muestra la cuenta atrás y las runas bloqueadas. Los efectos negativos se limpian al cambiar de combate o reiniciar. Ambos costes aparecen en las tarjetas de compra y en **Mis runas**.
+
+`tests/spells.gd` comprueba el catálogo nuevo, las compras, el inventario, el agotamiento de ofertas, 20.000 sorteos con semilla fija y los efectos secundarios. Los valores y probabilidades son configurables y el equilibrio sigue pendiente de pruebas en Android físico.
+
+[Magia negra durante un combate](docs/black_magic.png).
