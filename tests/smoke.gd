@@ -83,6 +83,8 @@ func run() -> void:
 	scene.controls[0].pressed.emit()
 	check(scene.state == "menu" and is_equal_approx(cell.elapsed, 5.5), "Closing tutorial preserves animation time")
 	scene.controls[1].pressed.emit()
+	scene.get_node("CombatTransition").advance(0.5)
+	scene.get_node("CombatTransition").advance(0.5)
 	check(scene.state == "fight" and not cell.visible and not cell.playing, "Start button hides and stops menu")
 	cell.advance(1.0)
 	check(is_equal_approx(cell.elapsed, 5.5), "Menu clock stops during combat")
@@ -93,6 +95,8 @@ func run() -> void:
 	scene.controls[2].pressed.emit()
 	check(scene.tutorial_page == 2 and scene.controls[2].text == "INICIAR", "Last tutorial page offers Start")
 	scene.controls[2].pressed.emit()
+	scene.get_node("CombatTransition").advance(0.5)
+	scene.get_node("CombatTransition").advance(0.5)
 	check(scene.state == "fight" and not cell.playing, "Start from tutorial begins a run")
 	await process_frame
 	check(scene.state == "fight" and scene.hp == 100, "New run starts fight")

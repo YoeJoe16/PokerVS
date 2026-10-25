@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1"]
 
@@ -11,6 +11,8 @@
 [ext_resource type="Script" path="res://scripts/menu_ui.gd" id="5"]
 
 [ext_resource type="PackedScene" path="res://scenes/intro.tscn" id="6"]
+
+[ext_resource type="Script" path="res://scripts/combat_transition.gd" id="7"]
 
 [node name="RuneArena" type="Node2D"]
 script = ExtResource("1")
@@ -33,3 +35,11 @@ script = ExtResource("5")
 
 [node name="Intro" parent="." instance=ExtResource("6")]
 z_index = 30
+
+[node name="CombatTransition" type="ColorRect" parent="."]
+z_index = 40
+offset_right = 480.0
+offset_bottom = 900.0
+mouse_filter = 0
+color = Color(0.067, 0.102, 0.169, 0)
+script = ExtResource("7")

@@ -82,14 +82,14 @@ func build_buttons() -> void:
 	controls.clear()
 	if state == "menu":
 		button("CÓMO JUGAR", Rect2(20, 818, 152, 54), open_tutorial)
-		button("INICIAR", Rect2(324, 818, 136, 54), new_run)
+		button("INICIAR", Rect2(324, 818, 136, 54), begin_run)
 	elif state == "tutorial":
 		button("CERRAR", Rect2(20, 818, 112, 54), close_tutorial)
 		button("ANTERIOR", Rect2(148, 818, 136, 54), func(): change_tutorial_page(-1), tutorial_page == 0)
 		if tutorial_page < 2:
 			button("SIGUIENTE", Rect2(300, 818, 160, 54), func(): change_tutorial_page(1))
 		else:
-			button("INICIAR", Rect2(324, 818, 136, 54), new_run)
+			button("INICIAR", Rect2(324, 818, 136, 54), begin_run)
 	elif state == "shop":
 		for slot in 3:
 			var slot_id := slot
@@ -144,6 +144,13 @@ func close_tutorial() -> void:
 func change_tutorial_page(direction: int) -> void:
 	tutorial_page = clampi(tutorial_page + direction, 0, 2)
 	build_buttons()
+
+func begin_run() -> void:
+	if $CombatTransition.active or state not in ["menu", "tutorial"]:
+		return
+	for control in controls:
+		control.disabled = true
+	$CombatTransition.start(new_run)
 
 func new_run() -> void:
 	$Intro.stop()
@@ -204,7 +211,7 @@ func _process(delta: float) -> void:
 			inventory_page = 0
 		pending_outcome = ""
 		build_buttons()
-	if state == "fight":
+	if state == "fight" and not $CombatTransition.active:
 		paralyzed = maxf(0.0, paralyzed - delta)
 		for id in NAMES.size():
 			cooldown[id] = maxf(0, cooldown[id] - delta)
@@ -237,7 +244,7 @@ func _process(delta: float) -> void:
 	$MenuUI.queue_redraw()
 
 func _input(event: InputEvent) -> void:
-	if state != "fight" or paralyzed > 0:
+	if state != "fight" or paralyzed > 0 or $CombatTransition.active:
 		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed and DRAW_AREA.has_point(event.position):
@@ -264,7 +271,7 @@ func _input(event: InputEvent) -> void:
 			message = "Mantén el trazo dentro del panel."
 
 func cast_spell(id: int) -> void:
-	if state != "fight" or id not in equipped or paralyzed > 0:
+	if state != "fight" or id not in equipped or paralyzed > 0 or $CombatTransition.active:
 		return
 	if cooldown[id] > 0:
 		message = "%s se está recargando." % NAMES[id]

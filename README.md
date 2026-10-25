@@ -196,8 +196,8 @@ Todos se dibujan en un solo trazo. Los nuevos lanzamientos reutilizan las seis f
 La apertura sigue tres páginas y ocho viñetas, de arriba hacia abajo:
 
 1. Llegada a la ciudad, paso por el callejón y sorpresa del aprendiz.
-2. Dos policías junto al civil muerto, descubrimiento del testigo y preparación del aprendiz para combatir.
-3. Un policía lanza magia maldita; el aprendiz impacta contra el muro y se desploma.
+2. Dos policías junto al civil muerto dentro de un bar, descubrimiento del testigo y preparación del aprendiz para combatir.
+3. Un policía lanza magia maldita en el bar; el aprendiz impacta contra el muro y se desploma.
 
 La dirección visual comparte la cuadrícula de 240 píxeles, los colores planos y las proporciones del menú. Se reutilizan el sprite del aprendiz y la cabeza de la celda. Fondos, policías y movimientos se dibujan directamente en Godot con rectángulos, polígonos y líneas sin suavizado; no se usan ilustraciones detalladas ni imágenes generadas en la introducción.
 
@@ -210,3 +210,7 @@ Cada viñeta aparece mediante un fundido de 0,8 segundos, con 3 segundos entre c
 Prueba adicional: `godot --headless --path . --script res://tests/intro.gd` (sustituye `godot` por la ruta de tu ejecutable Godot 4.7). Se revisaron capturas de las tres páginas y de la transición final con OpenGL; queda pendiente validar en Android físico.
 
 [Primera página](docs/intro1.png) · [Segunda página](docs/intro2.png) · [Tercera página](docs/intro3.png).
+
+El callejón comparte un único punto de fuga entre las paredes, los bordes y las juntas del suelo. Las escenas de los policías y el enfrentamiento muestran un bar con estanterías de botellas, barra y taburetes, manteniendo el pixel art sencillo.
+
+Al pulsar **INICIAR** desde el menú o la última página del tutorial, `scripts/combat_transition.gd` aplica el mismo fundido de 0,5 segundos por tramo que las viñetas. La partida se crea con la pantalla opaca y los ataques y el dibujo quedan bloqueados hasta completar la entrada. Las pulsaciones repetidas no reinician la transición. Las pruebas de introducción también verifican este flujo.

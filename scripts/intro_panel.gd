@@ -44,32 +44,61 @@ func city() -> void:
 	box(175, 96, 20, 3, "bdbaa0")
 
 func alley() -> void:
+	# One vanishing point; paving and side walls share the same ground edges.
 	box(0, 0, 240, 240, "182332")
-	draw_colored_polygon(PackedVector2Array([Vector2(0, 0), Vector2(87, 0), Vector2(87, 84), Vector2(0, 192)]), Color("293846"))
-	draw_colored_polygon(PackedVector2Array([Vector2(153, 0), Vector2(240, 0), Vector2(240, 192), Vector2(153, 84)]), Color("263b40"))
-	for y in range(8, 180, 18):
-		box(0, y, 68, 1, "1f2d3b")
-		box(173, y, 67, 1, "1f2d3b")
-		for x in range(6 + (y / 18 as int) % 2 * 14, 66, 28):
-			box(x, y, 1, 17, "1f2d3b")
-	line([Vector2(16, 0), Vector2(16, 115), Vector2(32, 115)], "637870", 3)
-	box(32, 49, 20, 30, "14222e")
-	box(34, 51, 16, 26, "466878")
-	box(41, 51, 2, 26, "182c3b")
-	box(188, 30, 5, 59, "14222e")
-	box(181, 27, 20, 4, "bdbaa0")
-	box(97, 15, 19, 66, "293846")
-	box(124, 5, 18, 76, "31404c")
-	for y in [24, 42, 60]:
-		box(102, y, 4, 5, "87988c")
-		box(129, y - 6, 4, 5, "87988c")
-	draw_colored_polygon(PackedVector2Array([Vector2(87, 84), Vector2(153, 84), Vector2(240, 193), Vector2(240, 240), Vector2(0, 240), Vector2(0, 193)]), Color("253641"))
-	for y in [105, 136, 177, 220]:
+	box(91, 12, 58, 70, "293846")
+	for x in [99, 119, 139]:
+		for y in [23, 44, 65]:
+			box(x, y, 4, 6, "87988c")
+	draw_colored_polygon(PackedVector2Array([Vector2(0, 0), Vector2(83, 0), Vector2(83, 81), Vector2(0, 185)]), Color("293846"))
+	draw_colored_polygon(PackedVector2Array([Vector2(157, 0), Vector2(240, 0), Vector2(240, 185), Vector2(157, 81)]), Color("263b40"))
+	for y in [18, 49, 80, 111, 142]:
+		line([Vector2(0, y), Vector2(83, 33 + y * 0.25)], "1f2d3b")
+		line([Vector2(240, y), Vector2(157, 33 + y * 0.25)], "1f2d3b")
+	line([Vector2(17, 0), Vector2(17, 149)], "637870", 3)
+	# A doorway attached to the left wall, with a sloped lintel and threshold.
+	draw_colored_polygon(PackedVector2Array([Vector2(30, 37), Vector2(57, 43), Vector2(57, 114), Vector2(30, 148)]), Color("14222e"))
+	line([Vector2(32, 145), Vector2(32, 40), Vector2(56, 45)], "536c69", 2)
+	box(49, 85, 3, 5, "bdbaa0")
+	box(197, 26, 4, 52, "14222e")
+	box(190, 23, 18, 4, "bdbaa0")
+	var floor_shape := PackedVector2Array([Vector2(83, 81), Vector2(157, 81), Vector2(240, 185), Vector2(240, 240), Vector2(0, 240), Vector2(0, 185)])
+	draw_colored_polygon(floor_shape, Color("253641"))
+	line([Vector2(0, 185), Vector2(83, 81), Vector2(157, 81), Vector2(240, 185)], "536c69", 2)
+	for y in [92, 110, 139, 178, 226]:
+		var inset := maxf(0, 83 - (y - 81) * 83.0 / 104)
+		line([Vector2(inset, y), Vector2(240 - inset, y)], "172a38")
+	for x in [42, 94, 146, 198]:
+		line([Vector2(120 + (x - 120) * 0.2, 81), Vector2(x, 240)], "172a38")
+	box(149, 139, 21, 2, "435d66")
+	box(43, 192, 28, 2, "435d66")
+
+func bar_interior() -> void:
+	# A modest modern bar: sign, bottles, counter, stools and tiled floor.
+	box(0, 0, 240, 240, "293846")
+	box(0, 80, 240, 160, "253641")
+	box(0, 80, 240, 2, "536c69")
+	box(86, 3, 68, 21, "14222e")
+	box(88, 5, 64, 1, "82c5b4")
+	draw_string(PixelUI.FONT, Vector2(108, 18), "BAR", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color("82c5b4"))
+	for x in [12, 160]:
+		box(x, 13, 66, 45, "14222e")
+		for y in [30, 52]:
+			box(x + 2, y, 62, 3, "87988c")
+			for offset in [8, 23, 40, 53]:
+				box(x + offset, y - 12, 5, 11, "637870")
+				box(x + offset + 1, y - 16, 3, 5, "87988c")
+		box(x - 2, 59, 70, 7, "87988c")
+		box(x, 66, 66, 20, "536c69")
+		box(x + 3, 68, 60, 2, "bdbaa0")
+	for x in [27, 191]:
+		box(x, 84, 17, 4, "ba7454")
+		box(x + 7, 88, 3, 17, "111a2b")
+		box(x + 2, 104, 13, 2, "677c79")
+	for y in [111, 145, 187, 231]:
 		box(0, y, 240, 1, "172a38")
-	for x in [-50, 30, 210, 290]:
-		line([Vector2(120, 84), Vector2(x, 240)], "172a38")
-	box(163, 135, 29, 3, "435d66")
-	box(38, 167, 35, 2, "435d66")
+	for x in [39, 93, 147, 201]:
+		line([Vector2(120 + (x - 120) * 0.4, 81), Vector2(x, 240)], "172a38")
 
 func wall() -> void:
 	box(0, 0, 240, 240, "293846")
@@ -190,7 +219,7 @@ func _draw() -> void:
 			box(154, 37, 5, 21, "e4d4b4")
 			box(154, 64, 5, 5, "e4d4b4")
 		3:
-			alley()
+			bar_interior()
 			# Unarmed civilian on the ground, no gore.
 			box(88, 120, 57, 7, "142432")
 			box(93, 112, 13, 10, "cca68b")
@@ -202,16 +231,16 @@ func _draw() -> void:
 			officer(Vector2(165, 111))
 			curse(Vector2(61, 91), 6)
 		4:
-			wall()
+			bar_interior()
 			officer(Vector2(64, 174), 2.0, false, true)
 			officer(Vector2(181, 178), 2.0, false, true)
 		5:
-			alley()
+			bar_interior()
 			officer(Vector2(139, 102))
 			officer(Vector2(190, 112))
 			hero_back(Vector2(51, 146), 3)
 		6:
-			wall()
+			bar_interior()
 			officer(Vector2(121, 194), 2.0, true)
 			for i in 5:
 				curse(Vector2(51 + i * 35, 27 + (i % 2) * 12), 8 + int(clock * 3 + i) % 2)
