@@ -4,7 +4,7 @@ Juego 2D de magia para Android en vertical. Eres un aprendiz encarcelado por un 
 
 ## Cómo jugar
 
-Pulsa **INICIAR**. Dibuja un solo trazo en el panel inferior, comenzando en el punto blanco de la referencia del HUD, y levanta el dedo para lanzar. En computadora usa el botón izquierdo del ratón. El tamaño y la posición del dibujo pueden variar; la orientación y el sentido deben seguir la referencia. Un toque o un trazo demasiado corto no lanza hechizos.
+Al abrir el juego, mira las tres páginas de la introducción y pulsa **CONTINUAR** al terminar cada una. Después, en la celda animada, pulsa **INICIAR**. Dibuja un solo trazo en el panel inferior, comenzando en el punto blanco de la referencia del HUD, y levanta el dedo para lanzar. En computadora usa el botón izquierdo del ratón. El tamaño y la posición del dibujo pueden variar; la orientación y el sentido deben seguir la referencia. Un toque o un trazo demasiado corto no lanza hechizos.
 
 Las tres tarjetas superiores muestran tus gestos y su recarga. El enemigo ataca automáticamente cuando termina su cuenta atrás; el tiempo sigue corriendo mientras dibujas. El escudo absorbe daño y el hielo detiene temporalmente la cuenta atrás.
 
@@ -77,7 +77,7 @@ Validar comodidad del dibujo en Android antes de ampliar el catálogo. Después:
 
 Cada etapa tiene 15 niveles: élites en 5 y 10, jefe en 15. `PrisonCampaign.location()` describe los 75 puestos de la campaña; los primeros quince tienen encuentros implementados y accesibles. Los demás requieren enemigos, escenarios y balance propios antes de habilitarse. Mazas y La Cerrajera son élites; El Síndico es el jefe del bloque.
 
-Dirección visual provisional: hormigón, barrotes, fluorescentes y cámaras con lentes rúnicas; uniformes y magia de contrabando. Personajes y fondo usan pixel art original: hojas de 11 poses por personaje y escenario de 240 × 148 píxeles, ampliados sin suavizado (aprendiz a 3×; rivales y escenario a 2×). El título «Fuga Rúnica» es provisional. La historia se insinúa con frases breves, sin cinemáticas.
+Dirección visual provisional: hormigón, barrotes, fluorescentes y cámaras con lentes rúnicas; uniformes y magia de contrabando. Personajes y fondo usan pixel art original: hojas de 11 poses por personaje y escenario de 240 × 148 píxeles, ampliados sin suavizado (aprendiz a 3×; rivales y escenario a 2×). El título «Fuga Rúnica» es provisional. La introducción muestra en viñetas el incidente que lleva al aprendiz a prisión; el resto de la historia se insinúa con frases breves.
 
 ## Vista de combate y animaciones
 
@@ -190,3 +190,23 @@ Todos se dibujan en un solo trazo. Los nuevos lanzamientos reutilizan las seis f
 `tests/spells.gd` comprueba el catálogo nuevo, las compras, el inventario, el agotamiento de ofertas, 20.000 sorteos con semilla fija y los efectos secundarios. Los valores y probabilidades son configurables y el equilibrio sigue pendiente de pruebas en Android físico.
 
 [Magia negra durante un combate](docs/black_magic.png).
+
+## Introducción en viñetas
+
+La apertura sigue tres páginas y ocho viñetas, de arriba hacia abajo:
+
+1. Llegada a la ciudad, paso por el callejón y sorpresa del aprendiz.
+2. Dos policías junto al civil muerto, descubrimiento del testigo y preparación del aprendiz para combatir.
+3. Un policía lanza magia maldita; el aprendiz impacta contra el muro y se desploma.
+
+La dirección visual comparte la cuadrícula de 240 píxeles, los colores planos y las proporciones del menú. Se reutilizan el sprite del aprendiz y la cabeza de la celda. Fondos, policías y movimientos se dibujan directamente en Godot con rectángulos, polígonos y líneas sin suavizado; no se usan ilustraciones detalladas ni imágenes generadas en la introducción.
+
+Cada viñeta aparece mediante un fundido de 0,8 segundos, con 3 segundos entre comienzos. Las anteriores permanecen visibles. El botón **CONTINUAR** solo aparece 1,2 segundos después de completar la última viñeta, y la página espera indefinidamente al jugador. Los cambios de página tienen un fundido a negro y de regreso, de 0,5 segundos por tramo. La última transición revela la celda animada; **INICIAR** se habilita al terminar y comienza el primer combate. Durante la introducción no funcionan el dibujo ni los controles de combate. Reintentar una partida no repite la cinemática; volver a abrir el juego sí.
+
+- `scenes/intro.tscn` y `scripts/intro.gd`: revelado, máscaras diagonales, botón y transiciones.
+- `scripts/intro_panel.gd`: escenarios y personajes de las ocho viñetas, pasos, sobresalto, conjuro e impacto/caída.
+- `tests/intro.gd`: orden de aparición, bloqueo de avance prematuro y doble pulsación, fundidos y llegada al menú y al combate.
+
+Prueba adicional: `godot --headless --path . --script res://tests/intro.gd` (sustituye `godot` por la ruta de tu ejecutable Godot 4.7). Se revisaron capturas de las tres páginas y de la transición final con OpenGL; queda pendiente validar en Android físico.
+
+[Primera página](docs/intro1.png) · [Segunda página](docs/intro2.png) · [Tercera página](docs/intro3.png).

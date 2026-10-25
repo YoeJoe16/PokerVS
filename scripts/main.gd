@@ -21,7 +21,7 @@ var shop_inventory := false
 var inventory_page := 0
 var shop_rng := RandomNumberGenerator.new()
 var paralyzed := 0.0
-var state := "menu"
+var state := "intro"
 var hp := 100
 var shield := 0
 var coins := 0
@@ -43,6 +43,8 @@ var controls: Array[Button] = []
 var font = UI.FONT
 
 func _ready() -> void:
+	$Intro.reveal_menu.connect(reveal_intro_menu)
+	$Intro.finished.connect(finish_intro)
 	cooldown.resize(NAMES.size())
 	cooldown.fill(0.0)
 	shop_rng.randomize()
@@ -73,7 +75,7 @@ func button(label: String, rect: Rect2, action: Callable, disabled := false) -> 
 
 func build_buttons() -> void:
 	arena.visible = state in ["fight", "resolving"]
-	menu_cell.set_active(state in ["menu", "tutorial"])
+	menu_cell.set_active(state in ["menu", "tutorial", "intro_transition"])
 	for node in controls:
 		node.disabled = true
 		node.queue_free()
@@ -110,6 +112,14 @@ func build_buttons() -> void:
 	elif state in ["dead", "victory"]:
 		button("VOLVER A INTENTAR" if state == "dead" else "NUEVO INTENTO", Rect2(45, 650, 390, 60), new_run)
 
+func reveal_intro_menu() -> void:
+	state = "intro_transition"
+	build_buttons()
+
+func finish_intro() -> void:
+	state = "menu"
+	build_buttons()
+
 func shop_items() -> Array:
 	return owned.slice(inventory_page * 3, inventory_page * 3 + 3) if shop_inventory else shop_offers
 
@@ -136,6 +146,7 @@ func change_tutorial_page(direction: int) -> void:
 	build_buttons()
 
 func new_run() -> void:
+	$Intro.stop()
 	hp = 100
 	shield = 0
 	coins = 0
@@ -365,7 +376,7 @@ func bar(rect: Rect2, ratio: float, color: Color) -> void:
 
 func _draw() -> void:
 	prison_background()
-	if state in ["menu", "tutorial"]:
+	if state in ["menu", "tutorial", "intro", "intro_transition"]:
 		return
 	elif state in ["fight", "resolving"]:
 		panel(Rect2(8, 8, 464, 82), Color("203341"))

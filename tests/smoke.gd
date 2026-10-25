@@ -52,6 +52,9 @@ func run() -> void:
 	root.add_child(scene)
 	scene.set_process(false)
 	scene.arena.set_process(false)
+	# The opening now precedes the menu; its sequencing has a dedicated suite.
+	scene.get_node("Intro").stop()
+	scene.finish_intro()
 	var cell = scene.menu_cell
 	cell.set_process(false)
 	check(cell.visible and cell.playing and scene.controls.size() == 2, "Menu starts animated with two buttons")

@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1"]
 
@@ -9,6 +9,8 @@
 [ext_resource type="PackedScene" path="res://scenes/menu_cell.tscn" id="4"]
 
 [ext_resource type="Script" path="res://scripts/menu_ui.gd" id="5"]
+
+[ext_resource type="PackedScene" path="res://scenes/intro.tscn" id="6"]
 
 [node name="RuneArena" type="Node2D"]
 script = ExtResource("1")
@@ -28,3 +30,6 @@ z_index = 3
 [node name="MenuUI" type="Node2D" parent="."]
 z_index = 10
 script = ExtResource("5")
+
+[node name="Intro" parent="." instance=ExtResource("6")]
+z_index = 30

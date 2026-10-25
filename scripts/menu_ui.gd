@@ -28,7 +28,7 @@ func spell_cards(ids: Array, y: float) -> void:
 		text(game.NAMES[id], Vector2(x + 16, y + 100), 16, game.COLORS[id])
 
 func _draw() -> void:
-	if game.state not in ["menu", "tutorial"]:
+	if game.state not in ["menu", "tutorial", "intro_transition"]:
 		return
 	# The title floats over the animation without a large banner or story text.
 	text("FUGA RÚNICA", Vector2(26, 66), 32, Color("0d1725"))

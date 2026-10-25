@@ -1,0 +1,26 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/intro.gd" id="1"]
+
+[node name="Intro" type="Node2D"]
+texture_filter = 1
+script = ExtResource("1")
+
+[node name="Art" type="Node2D" parent="."]
+scale = Vector2(2, 2)
+
+[node name="Next" type="Button" parent="."]
+visible = false
+offset_left = 294.0
+offset_top = 818.0
+offset_right = 460.0
+offset_bottom = 874.0
+text = "CONTINUAR"
+disabled = true
+
+[node name="Transition" type="ColorRect" parent="."]
+visible = false
+offset_right = 480.0
+offset_bottom = 900.0
+mouse_filter = 0
+color = Color(0.067, 0.102, 0.169, 0)
