@@ -57,7 +57,7 @@ En otra máquina sustituye la ruta del ejecutable por tu Godot 4.7. Estas compro
 2. Configura OpenJDK 17 y Android SDK según la documentación de exportación Android de Godot. Define sus rutas en los ajustes del editor.
 3. En **Proyecto → Exportar**, añade un destino Android, establece un identificador de paquete propio y exporta un APK de depuración. No necesitas modificar escenas para pasar de ratón a tacto: está activada la emulación de ratón desde la pantalla táctil.
 4. Instala el APK en tu teléfono o usa el despliegue con USB y depuración USB habilitada.
-5. Verifica los dieciséis gestos a distintas velocidades, las tres tarjetas en pantalla y los costes de magia negra, las tiendas, las recargas, la derrota y la victoria. Comprueba especialmente márgenes y legibilidad en tu modelo.
+5. Verifica los diecisiete gestos a distintas velocidades, las tres tarjetas en pantalla y los costes de magia negra, las tiendas, las recargas, la derrota y la victoria. Comprueba especialmente márgenes y legibilidad en tu modelo.
 
 La ventana lógica es de 480 × 900, orientación vertical y proporción conservada; otras pantallas pueden mostrar bandas. Se usa el renderizador Compatibility para este prototipo 2D. No se ha generado ni probado un APK en este entorno y no se incluyen credenciales de firma.
 
@@ -214,3 +214,11 @@ Prueba adicional: `godot --headless --path . --script res://tests/intro.gd` (sus
 El callejón comparte un único punto de fuga entre las paredes, los bordes y las juntas del suelo. Las escenas de los policías y el enfrentamiento muestran un bar con estanterías de botellas, barra y taburetes, manteniendo el pixel art sencillo.
 
 Al pulsar **INICIAR** desde el menú o la última página del tutorial, `scripts/combat_transition.gd` aplica el mismo fundido de 0,5 segundos por tramo que las viñetas. La partida se crea con la pantalla opaca y los ataques y el dibujo quedan bloqueados hasta completar la entrada. Las pulsaciones repetidas no reinician la transición. Las pruebas de introducción también verifican este flujo.
+
+## Reflejo — legendario
+
+**Reflejo** cuesta 120 monedas y comparte el peso de aparición legendario con Égida y Meteoro. Su gesto es un corchete abierto hacia la derecha: empieza arriba a la derecha, traza a la izquierda, baja y termina a la derecha (`← ↓ →`), sin levantar el dedo.
+
+Abre una ventana de **1,5 segundos** para anular y devolver **un solo ataque** del rival, con un máximo de **40 de daño devuelto** y **10 segundos de recarga** desde el lanzamiento. Si no llega un ataque a tiempo, se pierde la ventana. El golpe reflejado no consume tu barrera; el daño devuelto sí respeta la barrera enemiga. Las curaciones y defensas del rival no activan Reflejo. En ataques dobles solo se devuelve el primer pulso. Puede rematar a un enemigo y concede las recompensas normales. No evita el sacrificio de vida de Sangre ni otros costes propios.
+
+Un halo celeste y la cuenta atrás del HUD indican la ventana activa. Los valores limitan su uso a una respuesta de precisión, sin inmunidad permanente; el equilibrio aún debe probarse con gestos en Android.

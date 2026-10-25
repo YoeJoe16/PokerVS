@@ -19,6 +19,8 @@ var opponent_frozen := false
 var opponent_defeated := false
 var player_defeated := false
 var player_barrier := false
+var player_reflecting := false
+var enemy_attack_reflected := false
 var opponent_barrier := false
 var enemy_index := 0
 
@@ -37,6 +39,8 @@ func reset(index: int) -> void:
 	opponent_defeated = false
 	player_defeated = false
 	opponent_frozen = false
+	player_reflecting = false
+	enemy_attack_reflected = false
 	player_barrier = false
 	opponent_barrier = false
 	update_sprites()
@@ -46,6 +50,7 @@ func play_spell(id: int, from_player := true) -> void:
 	if from_player:
 		player_queue.append(id)
 	else:
+		enemy_attack_reflected = false
 		enemy_queue.append(id)
 	advance(0.0)
 
@@ -95,7 +100,7 @@ func update_sprites() -> void:
 			opponent.modulate = Color("ffd4ad")
 			if enemy_spell < 0:
 				opponent.frame = 9
-	if enemy_spell >= 0 and Book.DAMAGE[enemy_spell] > 0 and enemy_elapsed >= IMPACT_TIME and enemy_elapsed < 0.68:
+	if enemy_spell >= 0 and not enemy_attack_reflected and Book.DAMAGE[enemy_spell] > 0 and enemy_elapsed >= IMPACT_TIME and enemy_elapsed < 0.68:
 		player.position.x += -2 if int(enemy_elapsed * 35) % 2 == 0 else 2
 		player.modulate = Color("ffc7bc")
 		if player_spell < 0:
@@ -115,6 +120,8 @@ func ring(center: Vector2, radius: float, color: Color) -> void:
 
 func _draw() -> void:
 	# This node draws effects after its sibling actor sprites (z_index = 2).
+	if player_reflecting:
+		ring(player.position + Vector2(0, -34) * player.scale, 60, Color("b7e5ef"))
 	if player_barrier:
 		ring(player.position + Vector2(0, -34) * player.scale, 54, Color("668da8"))
 	if opponent_barrier:

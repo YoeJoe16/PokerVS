@@ -21,6 +21,7 @@ var shop_inventory := false
 var inventory_page := 0
 var shop_rng := RandomNumberGenerator.new()
 var paralyzed := 0.0
+var reflection := 0.0
 var state := "intro"
 var hp := 100
 var shield := 0
@@ -178,6 +179,7 @@ func start_battle() -> void:
 	attack_timer = encounter.interval
 	frozen = 0
 	paralyzed = 0
+	reflection = 0
 	cooldown.fill(0.0)
 	stroke.clear()
 	drawing = false
@@ -201,6 +203,7 @@ func select_spell(id: int) -> void:
 
 func _process(delta: float) -> void:
 	arena.opponent_frozen = frozen > 0
+	arena.player_reflecting = reflection > 0
 	arena.player_barrier = shield > 0
 	arena.opponent_barrier = enemy_ward > 0
 	if state == "resolving" and not arena.is_busy():
@@ -213,6 +216,7 @@ func _process(delta: float) -> void:
 		build_buttons()
 	if state == "fight" and not $CombatTransition.active:
 		paralyzed = maxf(0.0, paralyzed - delta)
+		reflection = maxf(0.0, reflection - delta)
 		for id in NAMES.size():
 			cooldown[id] = maxf(0, cooldown[id] - delta)
 		if frozen > 0:
@@ -227,12 +231,25 @@ func _process(delta: float) -> void:
 				enemy_hp = mini(enemy_max, enemy_hp + 24)
 			elif spell == 2:
 				enemy_ward = mini(48, enemy_ward + 24)
+			var reflected := reflection > 0 and damage > 0
+			if reflected:
+				reflection = 0.0
+				var returned := mini(40, damage)
+				var ward_blocked := mini(enemy_ward, returned)
+				enemy_ward -= ward_blocked
+				enemy_hp -= returned - ward_blocked
+				arena.enemy_attack_reflected = true
+				arena.play_spell(spell)
+				damage = 0
 			attack_count += 1
 			var blocked := mini(shield, damage)
 			shield -= blocked
 			hp = maxi(0, hp - damage + blocked)
 			attack_timer = next_interval()
 			message = "El rival recupera 24 de vida." if spell == 3 else ("El rival levanta una barrera." if spell == 2 else "¡Magia clandestina! −%d vida" % (damage - blocked))
+			if reflected:
+				message = "¡Ataque reflejado!"
+				resolve_spell_outcome()
 			if hp <= 0:
 				state = "resolving"
 				pending_outcome = "dead"
@@ -296,6 +313,7 @@ func cast_spell(id: int) -> void:
 		14:
 			hp = maxi(0, hp - 34)
 			message = "¡Sangre! Sacrificas 34 de vida."
+		16: reflection = 1.5
 		15:
 			paralyzed = 3.0
 			drawing = false
@@ -305,6 +323,9 @@ func cast_spell(id: int) -> void:
 	var absorbed := 0 if id == 9 else mini(enemy_ward, damage_dealt)
 	enemy_ward -= absorbed
 	enemy_hp += absorbed
+	resolve_spell_outcome()
+
+func resolve_spell_outcome() -> void:
 	if encounter.pattern in ["elite", "boss"] and not enraged and enemy_hp > 0 and enemy_hp <= enemy_max / 2:
 		enraged = true
 		attack_timer = minf(attack_timer, 2.5)
@@ -419,7 +440,7 @@ func _draw() -> void:
 			draw_rect(Rect2(stroke[0] - Vector2(3, 3), Vector2(6, 6)), Color.WHITE)
 		panel(Rect2(16, 814, 448, 66), Color("1c2c40"))
 		text(message, Vector2(25, 840), 14)
-		text("PARÁLISIS: %.1f s" % paralyzed if paralyzed > 0 else ("Furia activa" if enraged else "Presos / Bloque de celdas"), Vector2(25, 864), 14, Color("93acaa"))
+		text("PARÁLISIS: %.1f s" % paralyzed if paralyzed > 0 else ("REFLEJO: %.1f s" % reflection if reflection > 0 else ("Furia activa" if enraged else "Presos / Bloque de celdas")), Vector2(25, 864), 14, Color("93acaa"))
 	elif state == "shop":
 		panel(Rect2(16, 16, 448, 124))
 		text("CONTRABANDO", Vector2(25, 52), 30, Color("a5c2ff"))

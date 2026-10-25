@@ -20,7 +20,8 @@ static func templates() -> Array:
 		[Vector2(0.5, 0), Vector2(1, 0.5), Vector2(0.5, 1), Vector2(0, 0.5), Vector2(0.5, 0)],
 		[Vector2(0, 0), Vector2(1, 0), Vector2(1, 1), Vector2(0, 1), Vector2(0, 0)],
 		[Vector2(0.5, 0), Vector2(0.8, 1), Vector2(0, 0.4), Vector2(1, 0.4), Vector2(0.2, 1), Vector2(0.5, 0)],
-		[Vector2(0, 0), Vector2(1, 0), Vector2(1, 1), Vector2(0, 1), Vector2(0, 0.3), Vector2(0.65, 0.3), Vector2(0.65, 0.7), Vector2(0.35, 0.7)]
+		[Vector2(0, 0), Vector2(1, 0), Vector2(1, 1), Vector2(0, 1), Vector2(0, 0.3), Vector2(0.65, 0.3), Vector2(0.65, 0.7), Vector2(0.35, 0.7)],
+		[Vector2(1, 0), Vector2(0, 0), Vector2(0, 1), Vector2(1, 1)]
 	]
 
 static func normalize(points: Array) -> Array:

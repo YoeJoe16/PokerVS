@@ -23,8 +23,8 @@ func run() -> void:
 	check(valid, "Offers contain three distinct unowned spells")
 	for quality in 5:
 		check(absf(counts[quality] / 20000.0 - SpellBook.WEIGHTS[quality] / 100.0) < 0.015, "Seeded first-offer frequency matches category weight %d" % quality)
-	check(SpellBook.offers(range(16), rng).is_empty(), "Full collection exhausts shop safely")
-	var remainder := SpellBook.offers(range(14), rng)
+	check(SpellBook.offers(range(SpellBook.NAMES.size()), rng).is_empty(), "Full collection exhausts shop safely")
+	var remainder := SpellBook.offers(range(14) + [16], rng)
 	check(remainder.size() == 2 and 14 in remainder and 15 in remainder, "Only two unowned spells yields two offers")
 	var game = load("res://scenes/main.tscn").instantiate()
 	root.add_child(game)
@@ -106,7 +106,67 @@ func run() -> void:
 	game.start_battle()
 	check(game.paralyzed == 0, "Paralysis clears between encounters")
 	game.new_run()
-	check(game.owned == [0, 1, 2] and game.shop_offers.is_empty() and game.cooldown.size() == 16, "Restart resets new spell progression")
+	check(game.owned == [0, 1, 2] and game.shop_offers.is_empty() and game.cooldown.size() == SpellBook.NAMES.size(), "Restart resets new spell progression")
+	game.battle = 15
+	game.start_battle()
+	game.equipped = [16, 0, 2]
+	game.hp = 100
+	game.shield = 24
+	game.cast_spell(16)
+	check(game.reflection == 1.5 and game.cooldown[16] == 10, "Reflection arms short window and long cooldown")
+	game.attack_timer = 0
+	game._process(0.01)
+	check(game.hp == 100 and game.shield == 24 and game.enemy_hp == 402 and game.reflection == 0, "Reflection returns one attack without spending shield")
+	game.attack_count = 2
+	game.attack_timer = 0
+	game._process(0.01)
+	check(game.shield == 4 and game.enemy_hp == 402, "Next attack is not reflected")
+	game.start_battle()
+	game.cast_spell(16)
+	game._process(1.6)
+	game.attack_timer = 0
+	game._process(0.01)
+	check(game.enemy_hp == 420, "Expired reflection cannot return attacks")
+	game.start_battle()
+	game.cast_spell(16)
+	game.attack_count = 1
+	game.attack_timer = 0
+	game._process(0.01)
+	check(game.reflection > 0 and game.enemy_ward == 24, "Enemy support spell does not consume reflection")
+	game.attack_count = 3
+	game.attack_timer = 0
+	game._process(0.01)
+	check(game.enemy_ward == 0 and game.enemy_hp == 412, "Reflected damage respects enemy barrier")
+	game.start_battle()
+	game.encounter.damages = [100]
+	game.cast_spell(16)
+	game.attack_timer = 0
+	game._process(0.01)
+	check(game.enemy_hp == 380, "Reflected damage capped at forty")
+	game.battle = 4
+	game.start_battle()
+	game.hp = 100
+	game.shield = 0
+	game.cast_spell(16)
+	game.attack_timer = 0
+	game._process(0.01)
+	game.attack_timer = 0
+	game._process(0.01)
+	check(game.hp == 92 and game.enemy_hp == game.enemy_max - 8, "Only first pulse of double attack is reflected")
+	game.battle = 15
+	game.start_battle()
+	game.enemy_hp = 1
+	game.cast_spell(16)
+	game.attack_timer = 0
+	game._process(0.01)
+	check(game.pending_outcome == "victory" and game.state == "resolving", "Reflected killing blow resolves through normal victory flow")
+	for step in 40:
+		game.arena.advance(1.0)
+		game._process(0.0)
+	check(game.state == "victory" and game.last_reward == 130, "Reflected final blow finishes animations and grants boss reward")
+	check(SpellBook.QUALITY[16] == 3 and SpellBook.price(16) == 120, "Reflection uses legendary price and rarity")
+	game.new_run()
+	check(game.reflection == 0, "Restart clears reflection")
 	game.queue_free()
 	await process_frame
 	print("SPELLS: %d checks, %d failures; distribution %s" % [checks, failures, counts])
